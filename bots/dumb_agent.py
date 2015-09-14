@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 
 from bzrc import BZRC, Command
-import sys, math, time
+import sys, math, time, random
 
 # An incredibly simple agent.  All we do is find the closest enemy tank, drive
 # towards it, and shoot.  Note that if friendly fire is allowed, you will very
@@ -28,7 +28,14 @@ class Agent(object):
     def __init__(self, bzrc):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
+        self.turn_times = [0, 0]
+        self.turning = [False, False]
+        self.random_turn_time = random.uniform(3, 8)
+        self.shoot_times = [0, 0]
+        self.random_shoot_time = random.uniform(1.5, 2.5)
         self.commands = []
+        self.bzrc.speed(0, 1)
+        self.bzrc.speed(1, 1)
 
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
@@ -45,25 +52,30 @@ class Agent(object):
         self.commands = []
 
         # Decide what to do with each of my tanks
-        for bot in mytanks:
-            self.move(bot)
+        self.move(mytanks[0], time_diff)
+        self.move(mytanks[1], time_diff)
 
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
 
-    def move(self, bot):
-        command = Command(bot.index, 1.0, 0, True)
-        self.commands.append(command)
-
-    def normalize_angle(self, angle):
-        '''Make any angle be between +/- pi.'''
-        angle -= 2 * math.pi * int (angle / (2 * math.pi))
-        if angle <= -math.pi:
-            angle += 2 * math.pi
-        elif angle > math.pi:
-            angle -= 2 * math.pi
-        return angle
-
+    def move(self, bot, time_diff):
+        #if time_diff - self.shoot_times[bot.index] >= self.random_shoot_time:
+        if time_diff >= 0:
+            self.shoot_times[bot.index] = time_diff
+            self.random_shoot_time = random.uniform(1.5, 2.5)
+            self.bzrc.shoot(bot.index)
+        
+        if self.turning[bot.index]:
+            if time_diff - self.turn_times[bot.index] >= 1:
+                self.turn_times[bot.index] = time_diff
+                self.turning[bot.index] = False
+            self.bzrc.angvel(bot.index, 1)
+        else:
+            if time_diff - self.turn_times[bot.index] >= self.random_turn_time:
+                self.turn_times[bot.index] = time_diff
+                self.turning[bot.index] = True
+                self.random_turn_time = random.uniform(3, 8)
+            self.bzrc.angvel(bot.index, 0)
 
 def main():
     # Process CLI arguments.

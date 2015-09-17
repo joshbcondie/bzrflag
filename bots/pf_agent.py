@@ -46,22 +46,26 @@ class Agent(object):
 
         # Decide what to do with each of my tanks
         for bot in mytanks:
-            closest_flag_dx = 10000000
-            closest_flag_dy = 10000000
+            target_dx = 10000000
+            target_dy = 10000000
             force_x = 0
             force_y = 0
-            for flag in flags:
-                if bot.flag == "-" and flag.color not in bot.callsign and flag.poss_color not in bot.callsign:
-                    dx = flag.x - bot.x
-                    dy = flag.y - bot.y
-                    if dx * dx + dy * dy < closest_flag_dx * closest_flag_dx + closest_flag_dy * closest_flag_dy:
-                        closest_flag_dx = dx
-                        closest_flag_dy = dy
-                elif bot.flag != "-" and flag.color in bot.callsign:
-                    closest_flag_dx = flag.x - bot.x
-                    closest_flag_dy = flag.y - bot.y
-            force_x += 1 * closest_flag_dx
-            force_y += 1 * closest_flag_dy
+            if bot.flag == "-":
+                for flag in flags:
+                    if flag.color not in bot.callsign and flag.poss_color not in bot.callsign:
+                        dx = flag.x - bot.x
+                        dy = flag.y - bot.y
+                        if dx * dx + dy * dy < target_dx * target_dx + target_dy * target_dy:
+                            target_dx = dx
+                            target_dy = dy
+            else:
+                bases = self.bzrc.get_bases()
+                for base in bases:
+                    if base.color in bot.callsign:
+                        target_dx = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - bot.x
+                        target_dy = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - bot.y
+            force_x += 1 * target_dx
+            force_y += 1 * target_dy
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
             self.bzrc.speed(bot.index, speed_x + speed_y)

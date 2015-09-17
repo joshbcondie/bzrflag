@@ -43,26 +43,31 @@ class Agent(object):
 
         # Reset my set of commands (we don't want to run old commands)
         self.commands = []
-        
-        got_flag = False
-        for flag in flags:
-            if flag.poss_color in mytanks[0].callsign:
-                got_flag = True
 
         # Decide what to do with each of my tanks
         for bot in mytanks:
+            closest_flag_dx = 10000000
+            closest_flag_dy = 10000000
             force_x = 0
             force_y = 0
             for flag in flags:
-                if (not got_flag and flag.color == "green") or (got_flag and flag.color == "purple"):#not in bot.callsign:
-                    force_x += 1 * (flag.x - bot.x)
-                    force_y += 1 * (flag.y - bot.y)
+                if bot.flag == "-" and flag.color not in bot.callsign and flag.poss_color not in bot.callsign:
+                    dx = flag.x - bot.x
+                    dy = flag.y - bot.y
+                    if dx * dx + dy * dy < closest_flag_dx * closest_flag_dx + closest_flag_dy * closest_flag_dy:
+                        closest_flag_dx = dx
+                        closest_flag_dy = dy
+                elif bot.flag != "-" and flag.color in bot.callsign:
+                    closest_flag_dx = flag.x - bot.x
+                    closest_flag_dy = flag.y - bot.y
+            force_x += 1 * closest_flag_dx
+            force_y += 1 * closest_flag_dy
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
             self.bzrc.speed(bot.index, speed_x + speed_y)
             #self.bzrc.speed(bot.index, 1)
             self.bzrc.angvel(bot.index, self.normalize_angle(math.atan2(force_y, force_x) - bot.angle))
-            if random.uniform(0, 1) > 0.99:
+            if bot.flag != "-" or random.uniform(0, 1) > 0.99:
                 self.bzrc.shoot(bot.index)
 
         # Send the commands to the server

@@ -46,26 +46,7 @@ class Agent(object):
 
         # Decide what to do with each of my tanks
         for bot in mytanks:
-            target_dx = 10000000
-            target_dy = 10000000
-            force_x = 0
-            force_y = 0
-            if bot.flag == "-":
-                for flag in flags:
-                    if flag.color not in bot.callsign and flag.poss_color not in bot.callsign:
-                        dx = flag.x - bot.x
-                        dy = flag.y - bot.y
-                        if dx * dx + dy * dy < target_dx * target_dx + target_dy * target_dy:
-                            target_dx = dx
-                            target_dy = dy
-            else:
-                bases = self.bzrc.get_bases()
-                for base in bases:
-                    if base.color in bot.callsign:
-                        target_dx = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - bot.x
-                        target_dy = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - bot.y
-            force_x += 1 * target_dx
-            force_y += 1 * target_dy
+            force_x, force_y = self.get_net_force(bot.x, bot.y, bot.callsign, bot.flag != "-")
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
             self.bzrc.speed(bot.index, speed_x + speed_y)
@@ -76,6 +57,42 @@ class Agent(object):
 
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
+
+    def get_net_force(self, x, y, callsign, got_flag):
+        (f1_x, f1_y) = self.get_attractive_force(x, y, callsign, got_flag)
+        (f2_x, f2_y) = self.get_repulsive_force(x, y)
+        (f3_x, f3_y) = self.get_tangential_force(x, y)
+        return (f1_x + f2_x + f3_x, f1_y + f2_y + f3_y)
+
+    def get_attractive_force(self, x, y, callsign, got_flag):
+        flags = self.bzrc.get_flags()
+        target_dx = 10000000
+        target_dy = 10000000
+        
+        if not got_flag:
+            for flag in flags:
+                if flag.color not in callsign and flag.poss_color not in callsign:
+                    dx = flag.x - x
+                    dy = flag.y - y
+                    if dx * dx + dy * dy < target_dx * target_dx + target_dy * target_dy:
+                        target_dx = dx
+                        target_dy = dy
+        else:
+            bases = self.bzrc.get_bases()
+            for base in bases:
+                if base.color in callsign:
+                    target_dx = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - x
+                    target_dy = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - y
+        
+        return (target_dx, target_dy)
+
+    def get_repulsive_force(self, x, y):
+        #TODO
+        return (0, 0)
+
+    def get_tangential_force(self, x, y):
+        #TODO
+        return (0, 0)
 
     def move_to_position(self, bot, target_x, target_y):
         target_angle = math.atan2(target_y - bot.y,

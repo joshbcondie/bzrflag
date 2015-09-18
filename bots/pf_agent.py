@@ -2,6 +2,7 @@
 
 from bzrc import BZRC, Command
 import sys, math, time, random
+import shapely.geometry
 
 # An incredibly simple agent.  All we do is find the closest enemy tank, drive
 # towards it, and shoot.  Note that if friendly fire is allowed, you will very
@@ -88,6 +89,18 @@ class Agent(object):
 
     def get_repulsive_force(self, x, y):
         #TODO
+        obstacles=self.bzrc.get_obstacles()
+        for obst in obstacles:
+            obstX=0
+            obstY=0
+            for point in obst:
+                obstX+=point[0]
+                obstY+=point[1]
+            obstX/=4
+            obstY/=4
+            print "Center obstacle point: ("+str(obstX)+","+str(obstY)+")"
+            # poly = {'type': 'Polygon', 'coordinates': obst}
+            # obj=shapely.geometry.asShape(poly)
         return (0, 0)
 
     def get_tangential_force(self, x, y):

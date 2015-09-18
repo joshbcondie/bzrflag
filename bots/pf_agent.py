@@ -30,6 +30,7 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
+        self.displayed = False
 
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
@@ -48,6 +49,11 @@ class Agent(object):
         # Decide what to do with each of my tanks
         for bot in mytanks:
             self.bot = bot
+            if not self.displayed:
+                obstacles = self.bzrc.get_obstacles()
+                fields.display(flags, obstacles, self.get_attractive_force)
+                fields.write_to_file(flags, obstacles, self.get_attractive_force)
+                self.displayed = True
             force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y

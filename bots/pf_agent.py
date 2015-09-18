@@ -32,11 +32,14 @@ class Agent(object):
         self.commands = []
         self.displayed = False
 
-    def should_display_potential_fields(self):
+    def display_potential_fields(self):
         if not self.displayed and self.bot.flag != '-':
+            flags = self.bzrc.get_flags()
+            bases = self.bzrc.get_bases()
+            obstacles = self.bzrc.get_obstacles()
+            fields.display(flags, bases, obstacles, self.get_attractive_force)
+            fields.write_to_file(flags, bases, obstacles, self.get_attractive_force)
             self.displayed = True
-            return True
-        return False
 
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
@@ -55,12 +58,7 @@ class Agent(object):
         # Decide what to do with each of my tanks
         for bot in mytanks:
             self.bot = bot
-            if self.should_display_potential_fields():
-                bases = self.bzrc.get_bases()
-                obstacles = self.bzrc.get_obstacles()
-                fields.display(flags, bases, obstacles, self.get_attractive_force)
-                fields.write_to_file(flags, bases, obstacles, self.get_attractive_force)
-                self.displayed = True
+            self.display_potential_fields()
             force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y

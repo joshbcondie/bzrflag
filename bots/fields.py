@@ -124,6 +124,26 @@ def draw_flags(flags):
     
     return s
 
+def draw_bases(bases):
+    s = ''
+
+    for base in bases:
+        if base.color == 'blue':
+            color = 3
+        elif base.color == 'green':
+            color = 2
+        elif base.color == 'purple':
+            color = 4
+        elif base.color == 'red':
+            color = 1
+        #corner1_x
+        s += draw_line((base.corner1_x, base.corner1_y), (base.corner2_x, base.corner2_y), color)
+        s += draw_line((base.corner2_x, base.corner2_y), (base.corner3_x, base.corner3_y), color)
+        s += draw_line((base.corner3_x, base.corner3_y), (base.corner4_x, base.corner4_y), color)
+        s += draw_line((base.corner4_x, base.corner4_y), (base.corner1_x, base.corner1_y), color)
+    
+    return s
+
 def draw_obstacles(obstacles):
     '''Return a string which tells Gnuplot to draw all of the obstacles.'''
     s = ''
@@ -157,15 +177,16 @@ def plot_field(function):
     s += 'e\n'
     return s
 
-def write_to_file(flags, obstacles, field_function):
+def write_to_file(flags, bases, obstacles, field_function):
     outfile = open(FILENAME, 'w')
     print >>outfile, gnuplot_header(-WORLDSIZE / 2, WORLDSIZE / 2)
     print >>outfile, unset_arrow()
     print >>outfile, draw_flags(flags)
+    print >>outfile, draw_bases(bases)
     print >>outfile, draw_obstacles(obstacles)
     print >>outfile, plot_field(field_function)
 
-def display(flags, obstacles, field_function):
+def display(flags, bases, obstacles, field_function):
     try:
         from Gnuplot import GnuplotProcess
     except ImportError:
@@ -177,6 +198,7 @@ def display(flags, obstacles, field_function):
     gp.write(gnuplot_header(-WORLDSIZE / 2, WORLDSIZE / 2))
     gp.write(unset_arrow())
     gp.write(draw_flags(flags))
+    gp.write(draw_bases(bases))
     gp.write(draw_obstacles(obstacles))
     gp.write(plot_field(field_function))
 

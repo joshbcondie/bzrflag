@@ -50,9 +50,10 @@ class Agent(object):
         for bot in mytanks:
             self.bot = bot
             if not self.displayed:
+                bases = self.bzrc.get_bases()
                 obstacles = self.bzrc.get_obstacles()
-                fields.display(flags, obstacles, self.get_attractive_force)
-                fields.write_to_file(flags, obstacles, self.get_attractive_force)
+                fields.display(flags, bases, obstacles, self.get_attractive_force)
+                fields.write_to_file(flags, bases, obstacles, self.get_attractive_force)
                 self.displayed = True
             force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x

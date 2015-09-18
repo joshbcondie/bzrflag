@@ -3,6 +3,7 @@
 from bzrc import BZRC, Command
 import sys, math, time, random
 import shapely.geometry
+import fields
 
 # An incredibly simple agent.  All we do is find the closest enemy tank, drive
 # towards it, and shoot.  Note that if friendly fire is allowed, you will very
@@ -47,7 +48,8 @@ class Agent(object):
 
         # Decide what to do with each of my tanks
         for bot in mytanks:
-            force_x, force_y = self.get_net_force(bot.x, bot.y, bot.callsign, bot.flag != "-")
+            self.bot = bot
+            force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
             self.bzrc.speed(bot.index, speed_x + speed_y)
@@ -59,20 +61,20 @@ class Agent(object):
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
 
-    def get_net_force(self, x, y, callsign, got_flag):
-        (f1_x, f1_y) = self.get_attractive_force(x, y, callsign, got_flag)
+    def get_net_force(self, x, y):
+        (f1_x, f1_y) = self.get_attractive_force(x, y)
         (f2_x, f2_y) = self.get_repulsive_force(x, y)
         (f3_x, f3_y) = self.get_tangential_force(x, y)
         return (f1_x + f2_x + f3_x, f1_y + f2_y + f3_y)
 
-    def get_attractive_force(self, x, y, callsign, got_flag):
+    def get_attractive_force(self, x, y):
         flags = self.bzrc.get_flags()
         target_dx = 10000000
         target_dy = 10000000
         
-        if not got_flag:
+        if self.bot.flag == "-":
             for flag in flags:
-                if flag.color not in callsign and flag.poss_color not in callsign:
+                if flag.color not in self.bot.callsign and flag.poss_color not in self.bot.callsign:
                     dx = flag.x - x
                     dy = flag.y - y
                     if dx * dx + dy * dy < target_dx * target_dx + target_dy * target_dy:
@@ -81,7 +83,7 @@ class Agent(object):
         else:
             bases = self.bzrc.get_bases()
             for base in bases:
-                if base.color in callsign:
+                if base.color in self.bot.callsign:
                     target_dx = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - x
                     target_dy = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - y
         
@@ -90,22 +92,28 @@ class Agent(object):
     def get_repulsive_force(self, x, y):
         #TODO
         obstacles=self.bzrc.get_obstacles()
-        for obst in obstacles:
-            obstX=0
-            obstY=0
-            for point in obst:
-                obstX+=point[0]
-                obstY+=point[1]
-            obstX/=4
-            obstY/=4
-            print "Center obstacle point: ("+str(obstX)+","+str(obstY)+")"
+        target_dx=0
+        target_dy=0
+        # for obst in obstacles:
+        #     obstX=0
+        #     obstY=0
+        #     for point in obst:
+        #         obstX+=point[0]
+        #         obstY+=point[1]
+        #     obstX/=4
+        #     obstY/=4
+        #     target_dx-=obstX-x
+        #     target_dy-=obstY-y
+        #     # print "Center obstacle point: ("+str(obstX)+","+str(obstY)+")"
             # poly = {'type': 'Polygon', 'coordinates': obst}
             # obj=shapely.geometry.asShape(poly)
-        return (0, 0)
+        return (target_dx, target_dy)
 
     def get_tangential_force(self, x, y):
         #TODO
-        return (0, 0)
+        target_dx=0
+        target_dy=0
+        return (target_dx, target_dy)
 
     def move_to_position(self, bot, target_x, target_y):
         target_angle = math.atan2(target_y - bot.y,

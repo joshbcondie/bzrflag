@@ -1,3 +1,5 @@
+*.gpi
+*.pyc
 *.swp
 BZRFlag.egg-info
 BZRFlag-1.0/

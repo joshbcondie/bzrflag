@@ -94,16 +94,59 @@ def gnuplot_header(minimum, maximum):
     #s += "set title 'Potential Fields'\n"
     return s
 
-def draw_line(p1, p2):
+def draw_line(p1, p2, color=-1):
     '''Return a string to tell Gnuplot to draw a line from point p1 to
     point p2 in the form of a set command.'''
     x1, y1 = p1
     x2, y2 = p2
-    return 'set arrow from %s, %s to %s, %s nohead lt 3\n' % (x1, y1, x2, y2)
+    return 'set arrow from %s, %s to %s, %s nohead lt %s\n' % (x1, y1, x2, y2, color)
+
+def unset_arrow():
+    return 'unset arrow\n'
+
+def draw_flags(flags):
+    flag_size = 10
+    s = ''
+    
+    for flag in flags:
+        if flag.color == 'blue':
+            color = 3
+        elif flag.color == 'green':
+            color = 2
+        elif flag.color == 'purple':
+            color = 4
+        elif flag.color == 'red':
+            color = 1
+        s += draw_line((flag.x - flag_size, flag.y - flag_size), (flag.x + flag_size, flag.y - flag_size), color)
+        s += draw_line((flag.x + flag_size, flag.y - flag_size), (flag.x + flag_size, flag.y + flag_size), color)
+        s += draw_line((flag.x + flag_size, flag.y + flag_size), (flag.x - flag_size, flag.y + flag_size), color)
+        s += draw_line((flag.x - flag_size, flag.y + flag_size), (flag.x - flag_size, flag.y - flag_size), color)
+    
+    return s
+
+def draw_bases(bases):
+    s = ''
+
+    for base in bases:
+        if base.color == 'blue':
+            color = 3
+        elif base.color == 'green':
+            color = 2
+        elif base.color == 'purple':
+            color = 4
+        elif base.color == 'red':
+            color = 1
+        #corner1_x
+        s += draw_line((base.corner1_x, base.corner1_y), (base.corner2_x, base.corner2_y), color)
+        s += draw_line((base.corner2_x, base.corner2_y), (base.corner3_x, base.corner3_y), color)
+        s += draw_line((base.corner3_x, base.corner3_y), (base.corner4_x, base.corner4_y), color)
+        s += draw_line((base.corner4_x, base.corner4_y), (base.corner1_x, base.corner1_y), color)
+    
+    return s
 
 def draw_obstacles(obstacles):
     '''Return a string which tells Gnuplot to draw all of the obstacles.'''
-    s = 'unset arrow\n'
+    s = ''
 
     for obs in obstacles:
         last_point = obs[0]
@@ -111,6 +154,7 @@ def draw_obstacles(obstacles):
             s += draw_line(last_point, cur_point)
             last_point = cur_point
         s += draw_line(last_point, obs[0])
+    
     return s
 
 def plot_field(function):
@@ -133,13 +177,16 @@ def plot_field(function):
     s += 'e\n'
     return s
 
-def write_to_file(obstacles, field_function):
+def write_to_file(flags, bases, obstacles, field_function):
     outfile = open(FILENAME, 'w')
     print >>outfile, gnuplot_header(-WORLDSIZE / 2, WORLDSIZE / 2)
+    print >>outfile, unset_arrow()
+    print >>outfile, draw_flags(flags)
+    print >>outfile, draw_bases(bases)
     print >>outfile, draw_obstacles(obstacles)
     print >>outfile, plot_field(field_function)
 
-def display(obstacles, field_function):
+def display(flags, bases, obstacles, field_function):
     try:
         from Gnuplot import GnuplotProcess
     except ImportError:
@@ -149,6 +196,9 @@ def display(obstacles, field_function):
 
     gp = GnuplotProcess(persist=True)
     gp.write(gnuplot_header(-WORLDSIZE / 2, WORLDSIZE / 2))
+    gp.write(unset_arrow())
+    gp.write(draw_flags(flags))
+    gp.write(draw_bases(bases))
     gp.write(draw_obstacles(obstacles))
     gp.write(plot_field(field_function))
 

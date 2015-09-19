@@ -33,8 +33,8 @@ class Agent(object):
         self.displayed = False
 
     def display_potential_fields(self):
-        if self.displayed and self.bot.flag != '-':
-        # if not self.displayed:
+        # if self.displayed and self.bot.flag != '-':
+        if not self.displayed:
             flags = self.bzrc.get_flags()
             bases = self.bzrc.get_bases()
             obstacles = self.bzrc.get_obstacles()
@@ -92,7 +92,7 @@ class Agent(object):
         target_dy = 10000000
         target_x=0
         target_y=0
-        radius=100
+        radius=1000
         weight=1
         if self.bot.flag == "-":
             for flag in flags:
@@ -177,16 +177,16 @@ class Agent(object):
             obstX/=4
             obstY/=4
             radius=farthestDist/2
-            angle=self.get_angle(x,y,obstX,obstY)
+            angle=self.get_angle(x,y,obstX,obstY)+90
             distance=self.get_distance(x,y,obstX,obstY)
             if (distance==0):
                 distance=.000001
             if (distance<farthestDist):
-                target_dx-=math.sin(angle)*1/distance*weight
-                target_dy-=math.cos(angle)*1/distance*weight
+                target_dx-=math.cos(angle)*1/distance*weight
+                target_dy-=math.sin(angle)*1/distance*weight
                 if (distance<radius):
-                    target_dx-=math.sin(angle)*1/distance*weight
-                    target_dy-=math.cos(angle)*1/distance*weight
+                    target_dx-=math.cos(angle)*1/distance*weight
+                    target_dy-=math.sin(angle)*1/distance*weight
         # print "tangential target dx: "+str(target_dx)
         # print "tangential target dy: "+str(target_dy)
         return (target_dx, target_dy)

@@ -63,8 +63,8 @@ class Agent(object):
             force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
-            self.bzrc.speed(bot.index, speed_x + speed_y)
-            #self.bzrc.speed(bot.index, 1)
+            #self.bzrc.speed(bot.index, speed_x + speed_y)
+            self.bzrc.speed(bot.index, 1)
             self.bzrc.angvel(bot.index, self.normalize_angle(math.atan2(force_y, force_x) - bot.angle))
             if bot.flag != "-" or random.uniform(0, 1) > 0.99:
                 self.bzrc.shoot(bot.index)
@@ -110,8 +110,8 @@ class Agent(object):
                 if base.color in self.bot.callsign:
                     # target_dx = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - x
                     # target_dy = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - y
-                    target_x = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4 - x
-                    target_y = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4 - y
+                    target_x = (base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x) / 4
+                    target_y = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4
 
         distance=self.get_distance(x,y,target_x,target_y)
         angle=self.get_angle(x,y,target_x,target_y)

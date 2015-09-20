@@ -60,13 +60,14 @@ class Agent(object):
         for bot in mytanks:
             self.bot = bot
             self.display_potential_fields()
+            self.start_shooting = False
             force_x, force_y = self.get_net_force(bot.x, bot.y)
             speed_x = math.cos(bot.angle) * force_x
             speed_y = math.sin(bot.angle) * force_y
             #self.bzrc.speed(bot.index, speed_x + speed_y)
             self.bzrc.speed(bot.index, 1)
             self.bzrc.angvel(bot.index, self.normalize_angle(math.atan2(force_y, force_x) - bot.angle))
-            if bot.flag != "-" or random.uniform(0, 1) > 0.99:
+            if bot.flag != "-" or self.start_shooting:
                 self.bzrc.shoot(bot.index)
 
         # Send the commands to the server
@@ -114,6 +115,8 @@ class Agent(object):
                     target_y = (base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y) / 4
 
         distance=self.get_distance(x,y,target_x,target_y)
+        if distance <= 100:
+            self.start_shooting = True
         angle=self.get_angle(x,y,target_x,target_y)
         # target_dx=(distance-radius)*math.cos(angle)*weight
         # target_dy=(distance-radius)*math.sin(angle)*weight

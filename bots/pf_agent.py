@@ -30,16 +30,17 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
-        self.displayed = False
+        self.displayed = True
 
     def display_potential_fields(self):
         # if self.displayed and self.bot.flag != '-':
         if not self.displayed:
+            # print "Displaying fields"
             flags = self.bzrc.get_flags()
             bases = self.bzrc.get_bases()
             obstacles = self.bzrc.get_obstacles()
-            fields.display(flags, bases, obstacles, self.get_repulsive_force)
-            fields.write_to_file(flags, bases, obstacles, self.get_repulsive_force)
+            fields.display(flags, bases, obstacles, self.get_net_force)
+            fields.write_to_file(flags, bases, obstacles, self.get_net_force)
             self.displayed = True
 
     def tick(self, time_diff):
@@ -94,7 +95,7 @@ class Agent(object):
         target_x=0
         target_y=0
         radius=1000
-        weight=1
+        weight=.3
         if self.bot.flag == "-":
             for flag in flags:
                 if flag.color not in self.bot.callsign and flag.poss_color not in self.bot.callsign:
@@ -118,10 +119,28 @@ class Agent(object):
         if distance <= 100:
             self.start_shooting = True
         angle=self.get_angle(x,y,target_x,target_y)
-        # target_dx=(distance-radius)*math.cos(angle)*weight
-        # target_dy=(distance-radius)*math.sin(angle)*weight
-        target_dx=math.cos(angle)*weight
-        target_dy=math.sin(angle)*weight
+        target_dx=distance/100*math.cos(angle)*weight
+        target_dy=distance/100*math.sin(angle)*weight
+        maxXY=.7
+        if target_dx>maxXY:
+            target_dx=maxXY
+        if target_dy>maxXY:
+            target_dy=maxXY
+        if target_dx<-maxXY:
+            target_dx=-maxXY
+        if target_dy<-maxXY:
+            target_dy=-maxXY
+        # minXY=.01
+        # if target_dx<minXY:
+        #     target_dx=minXY
+        # if target_dy<minXY:
+        #     target_dy=minXY
+        # if target_dx>-minXY and target_dx<0:
+        #     target_dx=-minXY
+        # if target_dy>-minXY and target_dy<0:
+        #     target_dy=-minXY
+        # target_dx=math.cos(angle)*weight
+        # target_dy=math.sin(angle)*weight
         # print "attractive dx: "+str(target_dx)
         # print "attractive dy: "+str(target_dy)
         return (target_dx, target_dy)
@@ -130,7 +149,7 @@ class Agent(object):
         obstacles=self.bzrc.get_obstacles()
         target_dx=0
         target_dy=0
-        weight=100
+        weight=7
         for obst in obstacles:
             obstX=0
             obstY=0
@@ -145,7 +164,7 @@ class Agent(object):
                         farthestDist=newDist
             obstX/=4
             obstY/=4
-            radius=farthestDist/2
+            radius=farthestDist
             angle=self.get_angle(x,y,obstX,obstY)
             distance=self.get_distance(x,y,obstX,obstY)
             if (distance==0):
@@ -156,6 +175,24 @@ class Agent(object):
                 if (distance<radius):
                     target_dx-=math.cos(angle)*1/distance*weight
                     target_dy-=math.sin(angle)*1/distance*weight
+        # maxXY=1
+        # if target_dx>maxXY:
+        #     target_dx=maxXY
+        # if target_dy>maxXY:
+        #     target_dy=maxXY
+        # if target_dx<-maxXY:
+        #     target_dx=-maxXY
+        # if target_dy<-maxXY:
+        #     target_dy=-maxXY
+        # minXY=.01
+        # if target_dx<minXY:
+        #     target_dx=minXY
+        # if target_dy<minXY:
+        #     target_dy=minXY
+        # if target_dx>-minXY and target_dx<0:
+        #     target_dx=-minXY
+        # if target_dy>-minXY and target_dy<0:
+        #     target_dy=-minXY
         # print "repulsive target dx: "+str(target_dx)
         # print "repulsive target dy: "+str(target_dy)
         return (target_dx, target_dy)
@@ -164,7 +201,7 @@ class Agent(object):
         obstacles=self.bzrc.get_obstacles()
         target_dx=0
         target_dy=0
-        weight=100
+        weight=10
         for obst in obstacles:
             obstX=0
             obstY=0
@@ -179,7 +216,7 @@ class Agent(object):
                         farthestDist=newDist
             obstX/=4
             obstY/=4
-            radius=farthestDist/2
+            radius=farthestDist
             angle=self.get_angle(x,y,obstX,obstY)+90
             distance=self.get_distance(x,y,obstX,obstY)
             if (distance==0):
@@ -190,6 +227,24 @@ class Agent(object):
                 if (distance<radius):
                     target_dx-=math.cos(angle)*1/distance*weight
                     target_dy-=math.sin(angle)*1/distance*weight
+        # maxXY=.5
+        # if target_dx>maxXY:
+        #     target_dx=maxXY
+        # if target_dy>maxXY:
+        #     target_dy=maxXY
+        # if target_dx<-maxXY:
+        #     target_dx=-maxXY
+        # if target_dy<-maxXY:
+        #     target_dy=-maxXY
+        # minXY=.01
+        # if target_dx<minXY:
+        #     target_dx=minXY
+        # if target_dy<minXY:
+        #     target_dy=minXY
+        # if target_dx>-minXY and target_dx<0:
+        #     target_dx=-minXY
+        # if target_dy>-minXY and target_dy<0:
+        #     target_dy=-minXY
         # print "tangential target dx: "+str(target_dx)
         # print "tangential target dy: "+str(target_dy)
         return (target_dx, target_dy)

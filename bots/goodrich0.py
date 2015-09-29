@@ -1,27 +1,7 @@
 #!/usr/bin/python -tt
 
-from bzrc import BZRC, GoodrichCommand, Answer
+from bzrc import BZRC, Command, Answer
 import sys, math, time, random
-
-# An incredibly simple agent.  All we do is find the closest enemy tank, drive
-# towards it, and shoot.  Note that if friendly fire is allowed, you will very
-# often kill your own tanks with this code.
-
-#################################################################
-# NOTE TO STUDENTS
-# This is a starting point for you.  You will need to greatly
-# modify this code if you want to do anything useful.  But this
-# should help you to know how to interact with BZRC in order to
-# get the information you need.
-# 
-# After starting the bzrflag server, this is one way to start
-# this code:
-# python agent0.py [hostname] [port]
-# 
-# Often this translates to something like the following (with the
-# port name being printed out by the bzrflag server):
-# python agent0.py localhost 49857
-#################################################################
 
 class Agent(object):
 
@@ -50,7 +30,7 @@ class Agent(object):
         self.mytanks = mytanks
         self.othertanks = othertanks
         self.flags = flags
-        occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
+        #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
     def set_flag_goals(self):
         for tank in self.mytanks:
@@ -84,8 +64,8 @@ class Agent(object):
                 self.goals[bot.index] = flag.x, flag.y
             else:
                 self.goals[bot.index] = self.random_pos()
-        elif (bot.x, bot.y) == self.past_position[bot.index]:
-            self.goals[bot.index] = self.random_pos()
+        #elif (bot.x, bot.y) == self.past_position[bot.index]:
+            #self.goals[bot.index] = self.random_pos()
 
         x,y = self.goals[bot.index]
         dx = x - bot.x
@@ -94,7 +74,15 @@ class Agent(object):
         if dist < 10:
             self.goals[bot.index] = None
             return
-        self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
+        self.move_to_position(bot, x, y)
+        #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
+    
+    def move_to_position(self, bot, target_x, target_y):
+        target_angle = math.atan2(target_y - bot.y,
+                target_x - bot.x)
+        relative_angle = self.normalize_angle(target_angle - bot.angle)
+        command = Command(bot.index, 1, 2 * relative_angle, True)
+        self.commands.append(command)
 
     def random_pos(self):
         width = int(self.constants['worldsize'])

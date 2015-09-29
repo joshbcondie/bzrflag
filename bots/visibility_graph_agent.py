@@ -24,10 +24,20 @@ class Agent(object):
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
         self.set_flag_goals()
+        
+        self.vertex_positions = []
+        self.vertex_positions.append((self.mytanks[0].x, self.mytanks[0].y))
+        self.obstacles = self.bzrc.get_obstacles()
+        for obstacle in self.obstacles:
+            for vertex in obstacle:
+                self.vertex_positions.append(vertex)
+        self.vertex_positions.append(self.goals[0])
+        
+        print self.vertex_positions
 
     def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        self.mytanks = mytanks
+        self.mytanks = mytanks[:1]
         self.othertanks = othertanks
         self.flags = flags
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)

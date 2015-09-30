@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 
 from bzrc import BZRC, Command, Answer
-import sys, math, time, random
+import sys, math, time, random, numpy
 
 class Agent(object):
 
@@ -34,6 +34,20 @@ class Agent(object):
         self.vertex_positions.append(self.goals[0])
         
         print self.vertex_positions
+        
+        self.adjacency_matrix = numpy.zeros([len(self.vertex_positions), len(self.vertex_positions)])
+        
+        for i in range(len(self.obstacles)):
+            for j in range(4):
+                index = i * 4 + j + 1
+                if j < 3:
+                    self.adjacency_matrix[index][index + 1] = self.adjacency_matrix[index + 1][index] = math.sqrt((self.vertex_positions[index][0] - self.vertex_positions[index + 1][0]) ** 2 + (self.vertex_positions[index][1] - self.vertex_positions[index + 1][1]) ** 2)
+                else:
+                    first_corner = i * 4 + 1
+                    self.adjacency_matrix[index][first_corner] = self.adjacency_matrix[first_corner][index] = math.sqrt((self.vertex_positions[index][0] - self.vertex_positions[first_corner][0]) ** 2 + (self.vertex_positions[index][1] - self.vertex_positions[first_corner][1]) ** 2)
+        
+        numpy.set_printoptions(threshold=numpy.nan)
+        print self.adjacency_matrix
 
     def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()

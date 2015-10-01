@@ -33,7 +33,7 @@ class Agent(object):
                 self.vertex_positions.append(vertex)
         self.vertex_positions.append(self.goals[0])
         
-        print self.vertex_positions
+        print "self.vertex_positions = " + str(self.vertex_positions)
         
         self.adjacency_matrix = numpy.zeros([len(self.vertex_positions), len(self.vertex_positions)])
         
@@ -46,8 +46,89 @@ class Agent(object):
                     first_corner = i * 4 + 1
                     self.adjacency_matrix[index][first_corner] = self.adjacency_matrix[first_corner][index] = math.sqrt((self.vertex_positions[index][0] - self.vertex_positions[first_corner][0]) ** 2 + (self.vertex_positions[index][1] - self.vertex_positions[first_corner][1]) ** 2)
         
+        for i in range(len(self.vertex_positions)):
+            for j in range(i + 1, len(self.vertex_positions)):
+                if i == 0 or j == len(self.vertex_positions) - 1 or (i - 1) / 4 != (j - 1) / 4:
+                    #print "i = " + str(i)
+                    #print "j = " + str(j)
+                    xa = self.vertex_positions[i][0]
+                    ya = self.vertex_positions[i][1]
+                    xb = self.vertex_positions[j][0]
+                    yb = self.vertex_positions[j][1]
+                    #print "a = (" + str(xa) + ", " + str(ya) + ")"
+                    #print "b = (" + str(xb) + ", " + str(yb) + ")"
+                    intersect = False
+                    
+                    for m in range(len(self.obstacles)):
+                        if intersect:
+                            break
+                        for n in range(4):
+                            index = m * 4 + n + 1
+                            if index == i or index == j:
+                                continue
+                            xc = self.vertex_positions[index][0]
+                            yc = self.vertex_positions[index][1]
+                            #print "c = (" + str(xc) + ", " + str(yc) + ")"
+                            if n < 3:
+                                if index + 1 == i or index + 1 == j:
+                                    continue
+                                xd = self.vertex_positions[index + 1][0]
+                                yd = self.vertex_positions[index + 1][1]
+                            else:
+                                first_corner = m * 4 + 1
+                                if first_corner == i or first_corner == j:
+                                    continue
+                                xd = self.vertex_positions[first_corner][0]
+                                yd = self.vertex_positions[first_corner][1]
+                            #print "d = (" + str(xd) + ", " + str(yd) + ")"
+                            if self.segments_intersect(xa, ya, xb, yb, xc, yc, xd, yd):
+                                #print "intersection"
+                                #print "a = (" + str(xa) + ", " + str(ya) + ")"
+                                #print "b = (" + str(xb) + ", " + str(yb) + ")"
+                                #print "c = (" + str(xc) + ", " + str(yc) + ")"
+                                #print "d = (" + str(xd) + ", " + str(yd) + ")"
+                                intersect = True
+                                break
+                    
+                    if intersect:
+                        self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = 0
+                    else:
+                        self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = math.sqrt((self.vertex_positions[i][0] - self.vertex_positions[j][0]) ** 2 + (self.vertex_positions[i][1] - self.vertex_positions[j][1]) ** 2)
+        
         numpy.set_printoptions(threshold=numpy.nan)
-        print self.adjacency_matrix
+        print "self.adjacency_matrix = " + str(self.adjacency_matrix)
+
+    def segments_intersect(self, x1, y1, x2, y2, x3, y3, x4, y4):
+        if x1 == x2 and x3 == x4:
+            return False
+        elif x1 == x2:
+            m = (y4 - y3) / (x4 - x3)
+            b = y3 - m * x3
+            if x1 * m + b >= min(y3, y4) and x1 * m + b >= min(y1, y2) and x1 * m + b <= max(y3, y4) and x1 * m + b <= max(y1, y2):
+                return True
+            return False
+        elif x3 == x4:
+            m = (y2 - y1) / (x2 - x1)
+            b = y1 - m * x1
+            if x3 * m + b >= min(y3, y4) and x3 * m + b >= min(y1, y2) and x3 * m + b <= max(y3, y4) and x3 * m + b <= max(y1, y2):
+                return True
+            return False
+        
+        m12 = (y2 - y1) / (x2 - x1)
+        #print "m12 = " + str(m12)
+        b12 = y1 - m12 * x1
+        #print "b12 = " + str(b12)
+        m34 = (y4 - y3) / (x4 - x3)
+        #print "m34 = " + str(m34)
+        b34 = y3 - m34 * x3
+        #print "b34 = " + str(b34)
+        if m12 == m34:
+            return False
+        x = (b34 - b12) / (m12 - m34)
+        #print "x = " + str(x)
+        if x >= min(x1, x2) and x >= min(x3, x4) and x <= max(x1, x2) and x <= max(x3, x4):
+            return True
+        return False
 
     def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()

@@ -232,7 +232,7 @@ class Agent(object):
 
     def show_obstacle(self, obstacle):
         # print obstacle[0][0]
-        pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1]],'ro')
+        pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0],obstacle[0][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1],obstacle[0][1]],marker='o')
 
     def plot_visibility_graph(self):
         pyplot.figure(1)
@@ -245,7 +245,7 @@ class Agent(object):
 
 
     def plot_search_progress(visibility_graph, obstacles):
-        pyplot.figure(1)
+        pyplot.figure(2)
         for obstacle in obstacles:
             self.show_obstacle(obstacle)
 

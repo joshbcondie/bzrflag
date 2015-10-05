@@ -230,7 +230,7 @@ class Agent(object):
     def plot_visibility_graph(self):
         for obstacle in self.obstacles:
             self.show_obstacle(obstacle)
-
+        pyplot.show()
         # for node in self.visibility_graph:
         #     for neighbor in node.neighbors:
         #         plot.plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], 'g')

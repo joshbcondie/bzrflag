@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 
 from bzrc import BZRC, Command, Answer
-import sys, math, time, random, numpy
+import sys, math, time, random, numpy, matplotlib.pyplot as pyplot
 
 class Agent(object):
 
@@ -97,6 +97,7 @@ class Agent(object):
         
         numpy.set_printoptions(threshold=numpy.nan)
         print "self.adjacency_matrix = " + str(self.adjacency_matrix)
+        self.plot_visibility_graph()
 
     def segments_intersect(self, x1, y1, x2, y2, x3, y3, x4, y4):
         if x1 == x2 and x3 == x4:
@@ -222,6 +223,47 @@ class Agent(object):
             angle -= 2 * math.pi
         return angle
 
+    def show_obstacle(self, obstacle):
+        # print obstacle[0][0]
+        pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1]],'go')
+
+    def plot_visibility_graph(self):
+        for obstacle in self.obstacles:
+            self.show_obstacle(obstacle)
+
+        # for node in self.visibility_graph:
+        #     for neighbor in node.neighbors:
+        #         plot.plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], 'g')
+
+
+    def plot_search_progress(visibility_graph, obstacles):
+        for obstacle in obstacles:
+            self.show_obstacle(obstacle)
+
+        pyplot.show()
+        for node in visibility_graph:
+            for neighbor in node.neighbors:
+                draw_edge = False
+                if node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.visited:
+                    edge_color = 'r'
+                    draw_edge = True
+                elif node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.frontier:
+                    edge_color = 'b'
+                    draw_edge = True
+
+                if draw_edge:
+                    plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], edge_color)
+
+            node_color = 'go'
+            if node.search_state == SearchStates.visited:
+                node_color = 'ro'
+            elif node.search_state == SearchStates.frontier:
+                node_color = 'bo'
+
+            # Plot a colored point for the node
+            plot([node.point[0]], [node.point[1]], node_color)
+
+        show()
 
 def main():
     # Process CLI arguments.

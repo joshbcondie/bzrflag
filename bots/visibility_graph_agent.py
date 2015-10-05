@@ -95,6 +95,13 @@ class Agent(object):
                     else:
                         self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = math.sqrt((self.vertex_positions[i][0] - self.vertex_positions[j][0]) ** 2 + (self.vertex_positions[i][1] - self.vertex_positions[j][1]) ** 2)
         
+        half_worldsize = int(self.constants['worldsize']) / 2
+        tanklength = int(self.constants['tanklength'])
+        for i in range(1, len(self.vertex_positions) - 1):
+            if half_worldsize - self.vertex_positions[i][0] < tanklength or half_worldsize + self.vertex_positions[i][0] < tanklength or half_worldsize - self.vertex_positions[i][1] < tanklength or half_worldsize + self.vertex_positions[i][1] < tanklength:
+                for j in range(len(self.vertex_positions)):
+                    self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = 0
+        
         numpy.set_printoptions(threshold=numpy.nan)
         print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.plot_visibility_graph()

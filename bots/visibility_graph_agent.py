@@ -238,10 +238,18 @@ class Agent(object):
         pyplot.figure(1)
         for obstacle in self.obstacles:
             self.show_obstacle(obstacle)
-        pyplot.show()
         # for node in self.visibility_graph:
         #     for neighbor in node.neighbors:
         #         plot.plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], 'g')
+        for i in range(len(self.vertex_positions)):
+            pyplot.plot(self.vertex_positions[i][0],self.vertex_positions[i][1],'go')
+            for j in range(len(self.adjacency_matrix[0])):
+                if (self.adjacency_matrix[i][j]!=0):
+                    pyplot.plot([self.vertex_positions[i][0],self.vertex_positions[j][0]],[self.vertex_positions[i][1],self.vertex_positions[j][1]])
+        # for point in self.adjacency_matrix:
+        #     for target in point:
+        #         pyplot.plot()
+        pyplot.show()
 
 
     def plot_search_progress(visibility_graph, obstacles):

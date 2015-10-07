@@ -2,6 +2,7 @@
 
 from bzrc import BZRC, Command, Answer
 import sys, math, time, random, numpy, matplotlib.pyplot as pyplot
+import search
 
 class Agent(object):
 
@@ -104,7 +105,32 @@ class Agent(object):
         
         numpy.set_printoptions(threshold=numpy.nan)
         print "self.adjacency_matrix = " + str(self.adjacency_matrix)
+        self.updateGraph()
+        # search.dfs(self.graph,0)
+        search.bfs(self.graph,0)
+        # search.aStar(self.graph,self.adjacency_matrix,0)
         self.plot_visibility_graph()
+
+    def updateGraph(self):
+        graph=[]
+        for i in range(len(self.vertex_positions)):
+            nodes=[]
+            for j in range(len(self.adjacency_matrix[0])):
+                if (self.adjacency_matrix[i][j]!=0):
+                    nodes.append(j)
+
+            graph.append(nodes)
+        self.graph=graph
+    # def updateGraph(self):
+    #     graph={}
+    #     for i in range(len(self.vertex_positions)):
+    #         nodes=[]
+    #         for j in range(len(self.adjacency_matrix[0])):
+    #             if (self.adjacency_matrix[i][j]!=0):
+    #                 nodes.append(j)
+
+    #         graph.append(nodes)
+    #     self.graph=graph
 
     def segments_intersect(self, x1, y1, x2, y2, x3, y3, x4, y4):
         if x1 == x2 and x3 == x4:
@@ -232,7 +258,7 @@ class Agent(object):
 
     def show_obstacle(self, obstacle):
         # print obstacle[0][0]
-        pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0],obstacle[0][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1],obstacle[0][1]],marker='o')
+        pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0],obstacle[0][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1],obstacle[0][1]])
 
     def plot_visibility_graph(self):
         pyplot.figure(1)
@@ -280,7 +306,7 @@ class Agent(object):
             # Plot a colored point for the node
             plot([node.point[0]], [node.point[1]], node_color)
 
-        show()
+        pyplot.show()
 
 def main():
     # Process CLI arguments.

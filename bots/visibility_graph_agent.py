@@ -107,9 +107,12 @@ class Agent(object):
         print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
         # search.dfs(self.graph,0)
-        search.bfs(self.graph,0)
+        self.path = search.bfs(self.graph,0)
         # search.aStar(self.graph,self.adjacency_matrix,0)
         self.plot_visibility_graph()
+        
+        self.current_goal_index = 1
+        self.goals[0] = self.vertex_positions[self.path[self.current_goal_index]]
 
     def updateGraph(self):
         graph=[]
@@ -195,24 +198,28 @@ class Agent(object):
         results = self.bzrc.do_commands(self.commands)
 
     def update_goal(self, bot):
-        if bot.flag != '-':
-            self.goals[bot.index] = self.base.x, self.base.y
         if not self.goals[bot.index]:
-            flag = self.closest_flag(bot)
-            if flag:
-                self.goals[bot.index] = flag.x, flag.y
-            else:
-                self.goals[bot.index] = self.random_pos()
-        #elif (bot.x, bot.y) == self.past_position[bot.index]:
-            #self.goals[bot.index] = self.random_pos()
-
+            if bot.flag != '-':
+                if self.current_goal_index - 1 >= 0:
+                    self.current_goal_index -= 1
+            elif self.current_goal_index + 1 < len(self.path):
+                    self.current_goal_index += 1
+            
+            self.goals[bot.index] = self.vertex_positions[self.path[self.current_goal_index]]
+        elif bot.flag != '-' and self.current_goal_index == len(self.path) - 1:
+            self.current_goal_index -= 1
+            self.vertex_positions[0] = (self.base.x, self.base.y)
+        
+        self.goals[bot.index] = self.vertex_positions[self.path[self.current_goal_index]]
         x,y = self.goals[bot.index]
         dx = x - bot.x
         dy = y - bot.y
         dist = math.sqrt(dx**2 + dy**2)
-        if dist < 10:
+        if dist < 20:
+            print "reached goal " + str(self.goals[bot.index])
             self.goals[bot.index] = None
             return
+        print "move to position " + str(x) + ", " + str(y)
         self.move_to_position(bot, x, y)
         #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     

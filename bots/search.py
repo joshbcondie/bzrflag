@@ -42,6 +42,7 @@ def bfs(graph, start):
                 frontier.put(node)
                 visited.append(node)
         print visited
+    return visited
 
 def dfs(graph, start):
     visited, stack = [], [start]

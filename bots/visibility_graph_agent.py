@@ -106,9 +106,9 @@ class Agent(object):
         numpy.set_printoptions(threshold=numpy.nan)
         print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
-        # search.dfs(self.graph,0)
+        #self.path = search.dfs(self.graph,0)
         self.path = search.bfs(self.graph,0)
-        # search.aStar(self.graph,self.adjacency_matrix,0)
+        #self.path = search.aStar(self.graph,self.adjacency_matrix,0)
         self.plot_visibility_graph()
         
         self.current_goal_index = 1
@@ -168,6 +168,7 @@ class Agent(object):
         return False
 
     def update(self):
+        self.bzrc.shoot(0)
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks[:1]
         self.othertanks = othertanks
@@ -227,7 +228,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - bot.y,
                 target_x - bot.x)
         relative_angle = self.normalize_angle(target_angle - bot.angle)
-        command = Command(bot.index, 1, 2 * relative_angle, True)
+        command = Command(bot.index, 1, 2 * relative_angle, False)
         self.commands.append(command)
 
     def random_pos(self):

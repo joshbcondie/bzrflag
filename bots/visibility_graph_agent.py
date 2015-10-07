@@ -118,8 +118,11 @@ class Agent(object):
         graph=[]
         for i in range(len(self.vertex_positions)):
             nodes=[]
+            print "node: "+str(i)
             for j in range(len(self.adjacency_matrix[0])):
+                print "node: "+str(j)
                 if (self.adjacency_matrix[i][j]!=0):
+                    print "appending "+str(j)
                     nodes.append(j)
 
             graph.append(nodes)

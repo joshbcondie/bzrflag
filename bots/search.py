@@ -35,7 +35,34 @@ class PriorityQueue:
         return heapq.heappop(self.elements)[1]
 
 
+def heuristic(a, b):
+    (x1, y1) = a
+    (x2, y2) = b
+    return abs(x1 - x2) + abs(y1 - y2)
+
 def aStar(graph, weights, start):
+    goal=len(graph)-1
+    frontier = PriorityQueue()
+    frontier.put(start, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+    
+    while not frontier.empty():
+        current = frontier.get()
+        
+        if current == goal:
+            break
+        
+        for next in graph.neighbors(current):
+            new_cost = cost_so_far[current] + graph.cost(current, next)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost + heuristic(goal, next)
+                frontier.put(next, priority)
+                came_from[next] = current
+    
     return came_from, cost_so_far
 
 def bfs(graph, start):
@@ -48,6 +75,7 @@ def bfs(graph, start):
     while not frontier.empty():
         current = frontier.get()
         if current==goal:
+            visited.append(node)
             return visited
         # print "current: "+str(current)
         print("Visiting %r" % current)
@@ -66,6 +94,7 @@ def dfs(graph, start):
         print "vertex: "+str(vertex)
         print "visited: "+str(visited)
         if vertex == goal:
+            visited.append(vertex)
             return visited
         if vertex not in visited:
             visited.append(vertex)

@@ -100,3 +100,4 @@ def dfs(graph, start):
             visited.append(vertex)
             stack.extend(graph[vertex])
     return visited
+ 

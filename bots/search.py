@@ -21,6 +21,20 @@ class Queue:
     def get(self):
         return self.elements.popleft()
 
+class PriorityQueue:
+    def __init__(self):
+        self.elements = []
+    
+    def empty(self):
+        return len(self.elements) == 0
+    
+    def put(self, item, priority):
+        heapq.heappush(self.elements, (priority, item))
+    
+    def get(self):
+        return heapq.heappop(self.elements)[1]
+
+
 def aStar(graph, weights, start):
     return came_from, cost_so_far
 
@@ -42,6 +56,7 @@ def bfs(graph, start):
                 frontier.put(node)
                 visited.append(node)
         print visited
+    return visited
 
 def dfs(graph, start):
     visited, stack = [], [start]

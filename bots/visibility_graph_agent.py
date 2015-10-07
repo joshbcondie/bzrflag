@@ -269,6 +269,7 @@ class Agent(object):
         #         plot.plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], 'g')
         for i in range(len(self.vertex_positions)):
             pyplot.plot(self.vertex_positions[i][0],self.vertex_positions[i][1],'go')
+            pyplot.annotate(str(i),xy=(self.vertex_positions[i][0],self.vertex_positions[i][1]))
             for j in range(len(self.adjacency_matrix[0])):
                 if (self.adjacency_matrix[i][j]!=0):
                     pyplot.plot([self.vertex_positions[i][0],self.vertex_positions[j][0]],[self.vertex_positions[i][1],self.vertex_positions[j][1]])

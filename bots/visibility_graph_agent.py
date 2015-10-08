@@ -34,7 +34,7 @@ class Agent(object):
                 self.vertex_positions.append(vertex)
         self.vertex_positions.append(self.goals[0])
         
-        print "self.vertex_positions = " + str(self.vertex_positions)
+        #print "self.vertex_positions = " + str(self.vertex_positions)
         
         self.adjacency_matrix = numpy.zeros([len(self.vertex_positions), len(self.vertex_positions)])
         
@@ -104,7 +104,7 @@ class Agent(object):
                     self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = 0
         
         numpy.set_printoptions(threshold=numpy.nan)
-        print "self.adjacency_matrix = " + str(self.adjacency_matrix)
+        #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
         #self.path = search.dfs(self.graph,0)
         self.path = search.bfs(self.graph,0)
@@ -220,10 +220,10 @@ class Agent(object):
         dy = y - bot.y
         dist = math.sqrt(dx**2 + dy**2)
         if dist < 20:
-            print "reached goal " + str(self.goals[bot.index])
+            #print "reached goal " + str(self.goals[bot.index])
             self.goals[bot.index] = None
             return
-        print "move to position " + str(x) + ", " + str(y)
+        #print "move to position " + str(x) + ", " + str(y)
         self.move_to_position(bot, x, y)
         #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     

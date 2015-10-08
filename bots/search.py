@@ -112,11 +112,21 @@ def recurseDFS(graph, path, node, goal, visited):
     return path
 
 def dfs(graph, start, goal):
-    goal=len(graph)-1
     path=[]
-    visited=[]
-    path=recurseDFS(graph, path, start, goal, visited)
-    path.append(goal)
+    currentNode=Node(start,None)
+    visited, stack = [], [currentNode]
+    while stack:
+        currentNode = stack.pop()
+        if currentNode.vertex == goal:
+            break
+        if currentNode.vertex not in visited:
+            visited.append(currentNode.vertex)
+            for node in graph[currentNode.vertex]:
+                stack.append(Node(node,currentNode))
+    while currentNode is not None:
+        path.append(currentNode.vertex)
+        currentNode=currentNode.parent
+    path=path[::-1]
     print "dfs path: "+str(path)
     return path
  

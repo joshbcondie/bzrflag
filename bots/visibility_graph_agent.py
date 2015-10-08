@@ -109,9 +109,9 @@ class Agent(object):
         numpy.set_printoptions(threshold=numpy.nan)
         #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
-        #self.path = search.dfs(self.graph,0)
+        #self.path = search.dfs(self.graph,0,len(self.vertex_positions) - 1)
         self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
-        #self.path = search.aStar(self.graph,self.adjacency_matrix,0)
+        #self.path = search.aStar(self.graph,self.adjacency_matrix,0,len(self.vertex_positions) - 1)
         self.plot_visibility_graph()
         
         self.current_goal_index = 1

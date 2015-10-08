@@ -6,7 +6,7 @@
 
 import Queue
 import collections
-
+import heapq
 
 class Queue:
     def __init__(self):
@@ -40,40 +40,68 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
+class Node:
+    def __init__(self, vertex, parent):
+        self.vertex=vertex
+        self.parent=parent
+        self.cost=0
+
+    def setCost(self,weight):
+        self.cost=weight
+
+    def __eq__(self,other):
+        if type(other) is not Node:
+            return False
+        if other.vertex==self.vertex:
+            return True
+        return False
 
 def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
 
-def aStar(graph, weights, start, goal):
+def aStar(graph, weights, vertices, start, goal):
     frontier = PriorityQueue()
-    frontier.put(start, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
-    
+    currentNode=Node(start,None)
+    frontier.put(currentNode, 0)
+    nodesSoFar=[]
+    nodesSoFar.append(currentNode)
     while not frontier.empty():
-        current = frontier.get()
+        print "currentNode: "+str(currentNode.vertex)
+        currentNode = frontier.get()
         
-        if current == goal:
+        if currentNode.vertex == goal:
             break
         
-        for next in graph.neighbors(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
-            if next not in cost_so_far or new_cost < cost_so_far[next]:
-                cost_so_far[next] = new_cost
-                priority = new_cost + heuristic(goal, next)
-                frontier.put(next, priority)
-                came_from[next] = current
-    
-    return came_from, cost_so_far
-
-class Node:
-    def __init__(self, vertex, parent):
-        self.vertex=vertex
-        self.parent=parent
+        for node in graph[currentNode.vertex]:
+            print "checking node "+str(node)+" from "+str(currentNode.vertex)
+            newNode=None
+            index=-1
+            for i in range(len(nodesSoFar)):
+                if nodesSoFar[i].vertex==node:
+                    newNode=nodesSoFar[i]
+                    index=i
+                    break
+            newCost = currentNode.cost + weights[currentNode.vertex][node]
+            if index==-1 or newCost < newNode.cost:
+                priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
+                if newNode is None:
+                    newNode=Node(node,currentNode)
+                newNode.setCost(newCost)
+                frontier.put(newNode, priority)
+                if index is not -1:
+                    nodesSoFar[index]=newNode
+                else:
+                    nodesSoFar.append(newNode)
+        currentNode=newNode
+    path = []
+    while currentNode is not None:
+        path.append(currentNode.vertex)
+        currentNode=currentNode.parent
+    path=path[::-1]
+    print "a star path: "+str(path)
+    return path
 
 def bfs(graph, start, goal):
     frontier = Queue()

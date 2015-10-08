@@ -30,8 +30,11 @@ class Agent(object):
         self.vertex_positions.append((self.mytanks[0].x, self.mytanks[0].y))
         self.obstacles = self.bzrc.get_obstacles()
         for obstacle in self.obstacles:
-            for vertex in obstacle:
-                self.vertex_positions.append(vertex)
+            for i in range(len(obstacle)):
+                x = obstacle[i][0] - obstacle[(i + 2) % 4][0]
+                y = obstacle[i][1] - obstacle[(i + 2) % 4][1]
+                dist = math.sqrt(x ** 2 + y ** 2)
+                self.vertex_positions.append((obstacle[i][0] + x / dist * 10, obstacle[i][1] + y / dist * 10))
         self.vertex_positions.append(self.goals[0])
         
         #print "self.vertex_positions = " + str(self.vertex_positions)
@@ -107,7 +110,7 @@ class Agent(object):
         #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
         #self.path = search.dfs(self.graph,0)
-        self.path = search.bfs(self.graph,0)
+        self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
         #self.path = search.aStar(self.graph,self.adjacency_matrix,0)
         self.plot_visibility_graph()
         
@@ -211,6 +214,7 @@ class Agent(object):
             
             self.goals[bot.index] = self.vertex_positions[self.path[self.current_goal_index]]
         elif bot.flag != '-' and self.current_goal_index == len(self.path) - 1:
+            # This isn't getting called
             self.current_goal_index -= 1
             self.vertex_positions[0] = (self.base.x, self.base.y)
         

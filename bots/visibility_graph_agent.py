@@ -27,7 +27,7 @@ class Agent(object):
         self.set_flag_goals()
         
         self.vertex_positions = []
-        self.vertex_positions.append((self.mytanks[0].x, self.mytanks[0].y))
+        self.vertex_positions.append((self.base.x, self.base.y))
         self.obstacles = self.bzrc.get_obstacles()
         for obstacle in self.obstacles:
             for i in range(len(obstacle)):

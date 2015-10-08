@@ -21,6 +21,12 @@ class Queue:
     def get(self):
         return self.elements.popleft()
 
+    def printSelf(self):
+        nodeString=""
+        for node in self.elements:
+            nodeString+=str(node)+" "
+        print nodeString
+
 class PriorityQueue:
     def __init__(self):
         self.elements = []
@@ -40,8 +46,7 @@ def heuristic(a, b):
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
 
-def aStar(graph, weights, start):
-    goal=len(graph)-1
+def aStar(graph, weights, start, goal):
     frontier = PriorityQueue()
     frontier.put(start, 0)
     came_from = {}
@@ -65,39 +70,53 @@ def aStar(graph, weights, start):
     
     return came_from, cost_so_far
 
-def bfs(graph, start):
-    goal=len(graph)-1
+class Node:
+    def __init__(self, vertex, parent):
+        self.vertex=vertex
+        self.parent=parent
+
+def bfs(graph, start, goal):
     frontier = Queue()
-    frontier.put(start)
+    newNode = Node(start,None)
+    frontier.put(newNode)
     visited = []
     visited.append(start)
-    
+    currentNode = Node(start,None)
     while not frontier.empty():
-        current = frontier.get()
-        if current==goal:
-            visited.append(node)
-            return visited
+        currentNode = frontier.get()
+        if currentNode.vertex==goal:
+            break
         # print "current: "+str(current)
-        print("Visiting %r" % current)
-        for node in graph[current]:
+        # print("Visiting %r" % current)
+        for node in graph[currentNode.vertex]:
             if node not in visited:
-                frontier.put(node)
+                newNode=Node(node,currentNode)
+                frontier.put(newNode)
                 visited.append(node)
-        print visited
-    return visited
+    path = []
+    while currentNode is not None:
+        path.append(currentNode.vertex)
+        currentNode=currentNode.parent
+    path=path[::-1]
+    print "bfs path: "+str(path)
+    return path
 
-def dfs(graph, start):
-    visited, stack = [], [start]
+def recurseDFS(graph, path, node, goal, visited):
+    path.append(node)
+    visited.append(node)
+    for node in graph[node]:
+        if node==goal:
+            return path
+        if node not in visited and goal not in path:
+            path=recurseDFS(graph, path, node, goal, visited)
+    return path
+
+def dfs(graph, start, goal):
     goal=len(graph)-1
-    while stack:
-        vertex = stack.pop()
-        print "vertex: "+str(vertex)
-        print "visited: "+str(visited)
-        if vertex == goal:
-            visited.append(vertex)
-            return visited
-        if vertex not in visited:
-            visited.append(vertex)
-            stack.extend(graph[vertex])
-    return visited
+    path=[]
+    visited=[]
+    path=recurseDFS(graph, path, start, goal, visited)
+    path.append(goal)
+    print "dfs path: "+str(path)
+    return path
  

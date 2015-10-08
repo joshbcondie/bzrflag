@@ -27,14 +27,17 @@ class Agent(object):
         self.set_flag_goals()
         
         self.vertex_positions = []
-        self.vertex_positions.append((self.mytanks[0].x, self.mytanks[0].y))
+        self.vertex_positions.append((self.base.x, self.base.y))
         self.obstacles = self.bzrc.get_obstacles()
         for obstacle in self.obstacles:
-            for vertex in obstacle:
-                self.vertex_positions.append(vertex)
+            for i in range(len(obstacle)):
+                x = obstacle[i][0] - obstacle[(i + 2) % 4][0]
+                y = obstacle[i][1] - obstacle[(i + 2) % 4][1]
+                dist = math.sqrt(x ** 2 + y ** 2)
+                self.vertex_positions.append((obstacle[i][0] + x / dist * 10, obstacle[i][1] + y / dist * 10))
         self.vertex_positions.append(self.goals[0])
         
-        print "self.vertex_positions = " + str(self.vertex_positions)
+        #print "self.vertex_positions = " + str(self.vertex_positions)
         
         self.adjacency_matrix = numpy.zeros([len(self.vertex_positions), len(self.vertex_positions)])
         
@@ -104,10 +107,10 @@ class Agent(object):
                     self.adjacency_matrix[i][j] = self.adjacency_matrix[j][i] = 0
         
         numpy.set_printoptions(threshold=numpy.nan)
-        print "self.adjacency_matrix = " + str(self.adjacency_matrix)
+        #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
         #self.path = search.dfs(self.graph,0)
-        self.path = search.bfs(self.graph,0)
+        self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
         #self.path = search.aStar(self.graph,self.adjacency_matrix,0)
         self.plot_visibility_graph()
         
@@ -211,6 +214,7 @@ class Agent(object):
             
             self.goals[bot.index] = self.vertex_positions[self.path[self.current_goal_index]]
         elif bot.flag != '-' and self.current_goal_index == len(self.path) - 1:
+            # This isn't getting called
             self.current_goal_index -= 1
             self.vertex_positions[0] = (self.base.x, self.base.y)
         
@@ -220,10 +224,10 @@ class Agent(object):
         dy = y - bot.y
         dist = math.sqrt(dx**2 + dy**2)
         if dist < 20:
-            print "reached goal " + str(self.goals[bot.index])
+            #print "reached goal " + str(self.goals[bot.index])
             self.goals[bot.index] = None
             return
-        print "move to position " + str(x) + ", " + str(y)
+        #print "move to position " + str(x) + ", " + str(y)
         self.move_to_position(bot, x, y)
         #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     

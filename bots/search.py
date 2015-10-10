@@ -100,7 +100,7 @@ def aStar(graph, weights, vertices, start, goal):
         path.append(currentNode.vertex)
         currentNode=currentNode.parent
     path=path[::-1]
-    #print "a star path: "+str(path)
+    print "a star path: "+str(path)
     return path
 
 def bfs(graph, start, goal):

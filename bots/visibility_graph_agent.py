@@ -338,7 +338,6 @@ def main():
             algorithm = sys.argv[3]
         else:
             algorithm = 'aStar'
-        print algorithm
     except ValueError:
         execname = sys.argv[0]
         print >>sys.stderr, '%s: incorrect number of arguments' % execname

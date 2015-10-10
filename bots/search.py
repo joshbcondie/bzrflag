@@ -96,7 +96,7 @@ def aStar(graph, weights, vertices, start, goal, obstacles):
             newCost = currentNode.cost + weights[currentNode.vertex][node]
             if index==-1 or newCost < newNode.cost:
                 # priority = newCost + 0
-                priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
+                priority = newCost + heuristic(vertices[node],vertices[goal])
                 if newNode is None:
                     newNode=Node(node,currentNode)
                 newNode.setCost(newCost)

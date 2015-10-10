@@ -94,11 +94,12 @@ def aStar(graph, weights, vertices, start, goal, obstacles):
                     break
             newCost = currentNode.cost + weights[currentNode.vertex][node]
             if index==-1 or newCost < newNode.cost:
-                priority = newCost + 0
-                # priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
+                # priority = newCost + 0
+                priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
                 if newNode is None:
                     newNode=Node(node,currentNode)
                 newNode.setCost(newCost)
+                newNode.parent=currentNode
                 frontier.put(newNode, priority)
                 if index is not -1:
                     nodesSoFar[index]=newNode

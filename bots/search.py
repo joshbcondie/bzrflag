@@ -8,6 +8,7 @@ import Queue
 import collections
 import heapq
 import matplotlib.pyplot as pyplot
+import math
 
 class Queue:
     def __init__(self):
@@ -66,7 +67,7 @@ def distance(a, b):
 def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 def aStar(graph, weights, vertices, start, goal, obstacles):
     frontier = PriorityQueue()

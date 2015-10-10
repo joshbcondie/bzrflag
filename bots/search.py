@@ -57,6 +57,12 @@ class Node:
             return True
         return False
 
+
+def distance(a, b):
+    (x1, y1) = a
+    (x2, y2) = b
+    return abs(x1 - x2) + abs(y1 - y2)
+
 def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
@@ -88,7 +94,8 @@ def aStar(graph, weights, vertices, start, goal, obstacles):
                     break
             newCost = currentNode.cost + weights[currentNode.vertex][node]
             if index==-1 or newCost < newNode.cost:
-                priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
+                priority = newCost + 0
+                # priority = newCost + heuristic(vertices[currentNode.vertex],vertices[node])
                 if newNode is None:
                     newNode=Node(node,currentNode)
                 newNode.setCost(newCost)
@@ -99,11 +106,15 @@ def aStar(graph, weights, vertices, start, goal, obstacles):
                     nodesSoFar.append(newNode)
         currentNode=newNode
     path = []
+    cost=0
     while currentNode is not None:
         path.append(currentNode.vertex)
+        if currentNode.parent is not None:
+            cost+=distance(vertices[currentNode.vertex],vertices[currentNode.parent.vertex])
         currentNode=currentNode.parent
     path=path[::-1]
     print "a star path: "+str(path)
+    print "cost of path: "+str(cost)
     return path
 
 def bfs(graph, start, goal, obstacles, vertices):
@@ -128,11 +139,15 @@ def bfs(graph, start, goal, obstacles, vertices):
                 frontier.put(newNode)
                 visited.append(node)
     path = []
+    cost=0
     while currentNode is not None:
         path.append(currentNode.vertex)
+        if currentNode.parent is not None:
+            cost+=distance(vertices[currentNode.vertex],vertices[currentNode.parent.vertex])
         currentNode=currentNode.parent
     path=path[::-1]
     print "bfs path: "+str(path)
+    print "cost of path: "+str(cost)
     return path
 
 def recurseDFS(graph, path, node, goal, visited):
@@ -159,11 +174,15 @@ def dfs(graph, start, goal, obstacles, vertices):
             for node in graph[currentNode.vertex]:
                 stack.append(Node(node,currentNode))
     plotSearchProgress(vertices, currentNode, visited, obstacles, None)
+    cost=0
     while currentNode is not None:
         path.append(currentNode.vertex)
+        if currentNode.parent is not None:
+            cost+=distance(vertices[currentNode.vertex],vertices[currentNode.parent.vertex])
         currentNode=currentNode.parent
     path=path[::-1]
     print "dfs path: "+str(path)
+    print "cost of path: "+str(cost)
     return path
 
 def show_obstacle(obstacle):

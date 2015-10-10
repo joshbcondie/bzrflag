@@ -68,10 +68,12 @@ def aStar(graph, weights, vertices, start, goal, obstacles):
     frontier.put(currentNode, 0)
     nodesSoFar=[]
     nodesSoFar.append(currentNode)
+    touched=[]
     while not frontier.empty():
         #print "currentNode: "+str(currentNode.vertex)
         currentNode = frontier.get()
-        
+        touched.append(currentNode.vertex)
+        plotSearchProgress(vertices, currentNode, touched, obstacles, nodesSoFar)
         if currentNode.vertex == goal:
             break
         
@@ -115,7 +117,7 @@ def bfs(graph, start, goal, obstacles, vertices):
     while not frontier.empty():
         currentNode = frontier.get()
         touched.append(currentNode.vertex)
-        plotSearchProgress(vertices, currentNode, touched, obstacles, toVisit)
+        plotSearchProgress(vertices, currentNode, touched, obstacles, visited)
         if currentNode.vertex==goal:
             break
         # print "current: "+str(current)
@@ -156,7 +158,7 @@ def dfs(graph, start, goal, obstacles, vertices):
             plotSearchProgress(vertices, currentNode, visited, obstacles, None)
             for node in graph[currentNode.vertex]:
                 stack.append(Node(node,currentNode))
-    plotSearchProgress(vertices, currentNode, visited, obstacles)
+    plotSearchProgress(vertices, currentNode, visited, obstacles, None)
     while currentNode is not None:
         path.append(currentNode.vertex)
         currentNode=currentNode.parent
@@ -174,13 +176,22 @@ def plotSearchProgress(vertices, currentNode, visited, obstacles, toVisit):
     for obstacle in obstacles:
         show_obstacle(obstacle)
 
-    for vertex in visited:
-        pyplot.plot(vertices[vertex][0],vertices[vertex][1],'go')
+    if type(visited[0]) is not int:
+        for node in visited:
+            pyplot.plot(vertices[node.vertex][0],vertices[node.vertex][1],'go')
+    else:
+        for vertex in visited:
+            pyplot.plot(vertices[vertex][0],vertices[vertex][1],'go')
 
     if toVisit is not None:
-        for vertex in toVisit:
-            if vertex not in visited:
-                pyplot.plot(vertices[vertex][0],vertices[vertex][1],'ro')
+        if type(toVisit[0]) is not int:
+            for node in toVisit:
+                if node.vertex not in visited:
+                    pyplot.plot(vertices[node.vertex][0],vertices[node.vertex][1],'ro')
+        else:
+            for vertex in toVisit:
+                if vertex not in visited:
+                    pyplot.plot(vertices[vertex][0],vertices[vertex][1],'ro')
 
     while currentNode is not None:
         if (currentNode.parent is not None):

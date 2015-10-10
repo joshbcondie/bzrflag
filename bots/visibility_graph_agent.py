@@ -117,6 +117,15 @@ class Agent(object):
         else:
             self.path = search.aStar(self.graph,self.adjacency_matrix,self.vertex_positions,0,len(self.vertex_positions) - 1)
         self.plot_visibility_graph()
+                
+        for i in range(len(self.obstacles)):
+            obstacle = self.obstacles[i]
+            for j in range(len(obstacle)):
+                x = obstacle[j][0] - obstacle[(j + 2) % 4][0]
+                y = obstacle[j][1] - obstacle[(j + 2) % 4][1]
+                y *= abs(x / y)
+                dist = math.sqrt(x ** 2 + y ** 2)
+                self.vertex_positions[i * 4 + j + 1] = ((obstacle[j][0] + x / dist * 10, obstacle[j][1] + y / dist * 10))
         
         self.current_goal_index = 1
         self.goals[0] = self.vertex_positions[self.path[self.current_goal_index]]

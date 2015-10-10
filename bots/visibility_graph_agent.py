@@ -109,9 +109,9 @@ class Agent(object):
         numpy.set_printoptions(threshold=numpy.nan)
         #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
-        #self.path = search.dfs(self.graph,0,len(self.vertex_positions) - 1)
-        self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
-        #self.path = search.aStar(self.graph,self.adjacency_matrix,0,len(self.vertex_positions) - 1)
+        self.path = search.dfs(self.graph,0,len(self.vertex_positions) - 1,self.obstacles)
+        # self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
+        # self.path = search.aStar(self.graph,self.adjacency_matrix,self.vertex_positions,0,len(self.vertex_positions) - 1)
         self.plot_visibility_graph()
         
         self.current_goal_index = 1
@@ -294,35 +294,6 @@ class Agent(object):
         pyplot.show()
 
 
-    def plot_search_progress(visibility_graph, obstacles):
-        pyplot.figure(2)
-        for obstacle in obstacles:
-            self.show_obstacle(obstacle)
-
-        pyplot.show()
-        for node in visibility_graph:
-            for neighbor in node.neighbors:
-                draw_edge = False
-                if node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.visited:
-                    edge_color = 'r'
-                    draw_edge = True
-                elif node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.frontier:
-                    edge_color = 'b'
-                    draw_edge = True
-
-                if draw_edge:
-                    plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], edge_color)
-
-            node_color = 'go'
-            if node.search_state == SearchStates.visited:
-                node_color = 'ro'
-            elif node.search_state == SearchStates.frontier:
-                node_color = 'bo'
-
-            # Plot a colored point for the node
-            plot([node.point[0]], [node.point[1]], node_color)
-
-        pyplot.show()
 
 def main():
     # Process CLI arguments.

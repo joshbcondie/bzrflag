@@ -139,7 +139,7 @@ def recurseDFS(graph, path, node, goal, visited):
             path=recurseDFS(graph, path, node, goal, visited)
     return path
 
-def dfs(graph, start, goal):
+def dfs(graph, start, goal, obstacles):
     path=[]
     currentNode=Node(start,None)
     visited, stack = [], [currentNode]
@@ -157,4 +157,40 @@ def dfs(graph, start, goal):
     path=path[::-1]
     print "dfs path: "+str(path)
     return path
+
+def show_obstacle(self, obstacle):
+    # print obstacle[0][0]
+    pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0],obstacle[0][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1],obstacle[0][1]])
+
  
+def plotSearchProgress(vertices, currentNode, visited, obstacles):
+    pyplot.figure(1)
+    for obstacle in obstacles:
+        self.show_obstacle(obstacle)
+
+    for vertex in visited:
+        pyplot.plot(vertices[vertex],'ro')
+
+    # for node in visibilityGraph:
+    #     for neighbor in node.neighbors:
+    #         draw_edge = False
+    #         if node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.visited:
+    #             edge_color = 'r'
+    #             draw_edge = True
+    #         elif node.search_state == SearchStates.visited and neighbor.search_state == SearchStates.frontier:
+    #             edge_color = 'b'
+    #             draw_edge = True
+
+    #         if draw_edge:
+    #             plot([node.point[0], neighbor.point[0]], [node.point[1], neighbor.point[1]], edge_color)
+
+    #     node_color = 'go'
+    #     if node.search_state == SearchStates.visited:
+    #         node_color = 'ro'
+    #     elif node.search_state == SearchStates.frontier:
+    #         node_color = 'bo'
+
+        # Plot a colored point for the node
+        # plot([node.point[0]], [node.point[1]], node_color)
+        
+    pyplot.show()

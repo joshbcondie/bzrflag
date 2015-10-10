@@ -68,14 +68,14 @@ def aStar(graph, weights, vertices, start, goal):
     nodesSoFar=[]
     nodesSoFar.append(currentNode)
     while not frontier.empty():
-        print "currentNode: "+str(currentNode.vertex)
+        #print "currentNode: "+str(currentNode.vertex)
         currentNode = frontier.get()
         
         if currentNode.vertex == goal:
             break
         
         for node in graph[currentNode.vertex]:
-            print "checking node "+str(node)+" from "+str(currentNode.vertex)
+            #print "checking node "+str(node)+" from "+str(currentNode.vertex)
             newNode=None
             index=-1
             for i in range(len(nodesSoFar)):
@@ -100,7 +100,7 @@ def aStar(graph, weights, vertices, start, goal):
         path.append(currentNode.vertex)
         currentNode=currentNode.parent
     path=path[::-1]
-    print "a star path: "+str(path)
+    #print "a star path: "+str(path)
     return path
 
 def bfs(graph, start, goal):

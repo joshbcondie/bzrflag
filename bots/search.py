@@ -170,9 +170,12 @@ def dfs(graph, start, goal, obstacles, vertices):
             break
         if currentNode.vertex not in visited:
             visited.append(currentNode.vertex)
-            plotSearchProgress(vertices, currentNode, visited, obstacles, None)
             for node in graph[currentNode.vertex]:
                 stack.append(Node(node,currentNode))
+            if (len(stack)>0):
+                plotSearchProgress(vertices, currentNode, visited, obstacles, stack)
+            else:
+                plotSearchProgress(vertices, currentNode, visited, obstacles, None)
     plotSearchProgress(vertices, currentNode, visited, obstacles, None)
     cost=0
     while currentNode is not None:

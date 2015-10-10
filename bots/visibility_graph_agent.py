@@ -35,7 +35,7 @@ class Agent(object):
                 x = obstacle[i][0] - obstacle[(i + 2) % 4][0]
                 y = obstacle[i][1] - obstacle[(i + 2) % 4][1]
                 dist = math.sqrt(x ** 2 + y ** 2)
-                self.vertex_positions.append((obstacle[i][0] + x / dist * 10, obstacle[i][1] + y / dist * 10))
+                self.vertex_positions.append((obstacle[i][0] + x / dist * 0, obstacle[i][1] + y / dist * 0))
         self.vertex_positions.append(self.goals[0])
         
         #print "self.vertex_positions = " + str(self.vertex_positions)

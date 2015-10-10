@@ -7,6 +7,7 @@
 import Queue
 import collections
 import heapq
+import matplotlib.pyplot as pyplot
 
 class Queue:
     def __init__(self):
@@ -61,21 +62,21 @@ def heuristic(a, b):
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
 
-def aStar(graph, weights, vertices, start, goal):
+def aStar(graph, weights, vertices, start, goal, obstacles):
     frontier = PriorityQueue()
     currentNode=Node(start,None)
     frontier.put(currentNode, 0)
     nodesSoFar=[]
     nodesSoFar.append(currentNode)
     while not frontier.empty():
-        print "currentNode: "+str(currentNode.vertex)
+        #print "currentNode: "+str(currentNode.vertex)
         currentNode = frontier.get()
         
         if currentNode.vertex == goal:
             break
         
         for node in graph[currentNode.vertex]:
-            print "checking node "+str(node)+" from "+str(currentNode.vertex)
+            #print "checking node "+str(node)+" from "+str(currentNode.vertex)
             newNode=None
             index=-1
             for i in range(len(nodesSoFar)):
@@ -103,15 +104,18 @@ def aStar(graph, weights, vertices, start, goal):
     print "a star path: "+str(path)
     return path
 
-def bfs(graph, start, goal):
+def bfs(graph, start, goal, obstacles, vertices):
     frontier = Queue()
     newNode = Node(start,None)
     frontier.put(newNode)
     visited = []
     visited.append(start)
     currentNode = Node(start,None)
+    touched=[]
     while not frontier.empty():
         currentNode = frontier.get()
+        touched.append(currentNode.vertex)
+        plotSearchProgress(vertices, currentNode, touched, obstacles, toVisit)
         if currentNode.vertex==goal:
             break
         # print "current: "+str(current)
@@ -139,7 +143,7 @@ def recurseDFS(graph, path, node, goal, visited):
             path=recurseDFS(graph, path, node, goal, visited)
     return path
 
-def dfs(graph, start, goal, obstacles):
+def dfs(graph, start, goal, obstacles, vertices):
     path=[]
     currentNode=Node(start,None)
     visited, stack = [], [currentNode]
@@ -149,8 +153,10 @@ def dfs(graph, start, goal, obstacles):
             break
         if currentNode.vertex not in visited:
             visited.append(currentNode.vertex)
+            plotSearchProgress(vertices, currentNode, visited, obstacles, None)
             for node in graph[currentNode.vertex]:
                 stack.append(Node(node,currentNode))
+    plotSearchProgress(vertices, currentNode, visited, obstacles)
     while currentNode is not None:
         path.append(currentNode.vertex)
         currentNode=currentNode.parent
@@ -158,18 +164,28 @@ def dfs(graph, start, goal, obstacles):
     print "dfs path: "+str(path)
     return path
 
-def show_obstacle(self, obstacle):
+def show_obstacle(obstacle):
     # print obstacle[0][0]
     pyplot.plot([obstacle[0][0],obstacle[1][0],obstacle[2][0],obstacle[3][0],obstacle[0][0]],[obstacle[0][1],obstacle[1][1],obstacle[2][1],obstacle[3][1],obstacle[0][1]])
 
  
-def plotSearchProgress(vertices, currentNode, visited, obstacles):
+def plotSearchProgress(vertices, currentNode, visited, obstacles, toVisit):
     pyplot.figure(1)
     for obstacle in obstacles:
-        self.show_obstacle(obstacle)
+        show_obstacle(obstacle)
 
     for vertex in visited:
-        pyplot.plot(vertices[vertex],'ro')
+        pyplot.plot(vertices[vertex][0],vertices[vertex][1],'go')
+
+    if toVisit is not None:
+        for vertex in toVisit:
+            if vertex not in visited:
+                pyplot.plot(vertices[vertex][0],vertices[vertex][1],'ro')
+
+    while currentNode is not None:
+        if (currentNode.parent is not None):
+            pyplot.plot([vertices[currentNode.parent.vertex][0],vertices[currentNode.vertex][0]],[vertices[currentNode.parent.vertex][1],vertices[currentNode.vertex][1]],'g')
+        currentNode=currentNode.parent
 
     # for node in visibilityGraph:
     #     for neighbor in node.neighbors:

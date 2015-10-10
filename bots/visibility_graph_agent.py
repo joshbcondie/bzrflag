@@ -6,8 +6,9 @@ import search
 
 class Agent(object):
 
-    def __init__(self, bzrc):
+    def __init__(self, bzrc, algorithm):
         self.bzrc = bzrc
+        self.algorithm = algorithm
         self.constants = self.bzrc.get_constants()
         self.commands = []
         bases = self.bzrc.get_bases()
@@ -109,9 +110,12 @@ class Agent(object):
         numpy.set_printoptions(threshold=numpy.nan)
         #print "self.adjacency_matrix = " + str(self.adjacency_matrix)
         self.updateGraph()
-        self.path = search.dfs(self.graph,0,len(self.vertex_positions) - 1,self.obstacles)
-        # self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1)
-        # self.path = search.aStar(self.graph,self.adjacency_matrix,self.vertex_positions,0,len(self.vertex_positions) - 1)
+        if self.algorithm == 'dfs':
+            self.path = search.dfs(self.graph,0,len(self.vertex_positions) - 1,self.obstacles,self.vertex_positions)
+        elif self.algorithm == 'bfs':
+            self.path = search.bfs(self.graph,0,len(self.vertex_positions) - 1,self.obstacles,self.vertex_positions)
+        else:
+            self.path = search.aStar(self.graph,self.adjacency_matrix,self.vertex_positions,0,len(self.vertex_positions) - 1,self.obstacles)
         self.plot_visibility_graph()
         
         self.current_goal_index = 1
@@ -121,11 +125,11 @@ class Agent(object):
         graph=[]
         for i in range(len(self.vertex_positions)):
             nodes=[]
-            print "node: "+str(i)
+            #print "node: "+str(i)
             for j in range(len(self.adjacency_matrix[0])):
-                print "node: "+str(j)
+                #print "node: "+str(j)
                 if (self.adjacency_matrix[i][j]!=0):
-                    print "appending "+str(j)
+                    #print "appending "+str(j)
                     nodes.append(j)
 
             graph.append(nodes)
@@ -298,7 +302,13 @@ class Agent(object):
 def main():
     # Process CLI arguments.
     try:
-        execname, host, port = sys.argv
+        execname = sys.argv[0]
+        host = sys.argv[1]
+        port = sys.argv[2]
+        if len(sys.argv) > 3:
+            algorithm = sys.argv[3]
+        else:
+            algorithm = 'aStar'
     except ValueError:
         execname = sys.argv[0]
         print >>sys.stderr, '%s: incorrect number of arguments' % execname
@@ -309,7 +319,7 @@ def main():
     #bzrc = BZRC(host, int(port), debug=True)
     bzrc = BZRC(host, int(port))
 
-    agent = Agent(bzrc)
+    agent = Agent(bzrc, algorithm)
 
     prev_time = time.time()
 

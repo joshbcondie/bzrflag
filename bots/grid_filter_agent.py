@@ -17,15 +17,22 @@ class Agent(object):
                 self.base.x = (base.corner1_x+base.corner3_x)/2
                 self.base.y = (base.corner1_y+base.corner3_y)/2
         grid_filter_gl.init_window(50, 50)
-        self.update()
+        self.grid_size = 100
+        self.points = []
+        worldsize = int(self.constants['worldsize'])
+        for i in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
+            for j in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
+                self.points.append((i, j))
+        self.timer = 0
         self.past_position = {}
         self.goals = {}
         self.stuck = {}
+        self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
-        self.set_flag_goals()
+        self.update()
 
     def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
@@ -36,13 +43,6 @@ class Agent(object):
         grid_filter_gl.update_grid(self.grid)
         grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
-
-    def set_flag_goals(self):
-        for tank in self.mytanks:
-            best = [0,None]
-            flag = self.closest_flag(tank)
-            if flag:
-                self.goals[tank.index] = flag.x,flag.y
 
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
@@ -61,26 +61,26 @@ class Agent(object):
         results = self.bzrc.do_commands(self.commands)
 
     def update_goal(self, bot):
-        if bot.flag != '-':
-            self.goals[bot.index] = self.base.x, self.base.y
-        if not self.goals[bot.index]:
-            flag = self.closest_flag(bot)
-            if flag:
-                self.goals[bot.index] = flag.x, flag.y
+        if self.goals[bot.index] is None:
+            if self.timer > 10:
+                next_goal = self.next_goal(bot)
+                self.goals[bot.index] = next_goal
             else:
-                self.goals[bot.index] = self.random_pos()
-        #elif (bot.x, bot.y) == self.past_position[bot.index]:
-            #self.goals[bot.index] = self.random_pos()
+                self.timer += 1
 
-        x,y = self.goals[bot.index]
-        dx = x - bot.x
-        dy = y - bot.y
-        dist = math.sqrt(dx**2 + dy**2)
-        if dist < 10:
-            self.goals[bot.index] = None
-            return
-        self.move_to_position(bot, x, y)
-        #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
+        else:
+            x,y = self.points[self.goals[bot.index]]
+            dx = x - bot.x
+            dy = y - bot.y
+            dist = math.sqrt(dx**2 + dy**2)
+            if dist < 30:
+                self.points.remove(self.points[self.goals[bot.index]])
+                self.goals[bot.index] = None
+                self.bzrc.angvel(0, 0)
+                self.timer = 0
+                return
+            self.move_to_position(bot, x, y)
+            #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     
     def move_to_position(self, bot, target_x, target_y):
         target_angle = math.atan2(target_y - bot.y,
@@ -95,19 +95,18 @@ class Agent(object):
         y = random.randrange(width) - width/2
         return x,y
 
-    def closest_flag(self, bot):
+    def next_goal(self, bot):
+        #if self.goals[bot.index] is not None:
+        #    self.points.remove(self.points[self.goals[bot.index]])
         best = None
-        for flag in self.flags:
-            if flag.color == self.constants['team']:
-                continue
-            if flag.poss_color != 'none':
-                continue
-            dist = math.sqrt((flag.x - bot.x)**2 + (flag.y - bot.y)**2)
+        for i in range(len(self.points)):
+            x, y = self.points[i]
+            dist = math.sqrt((x - bot.x)**2 + (y - bot.y)**2)
             if not best or dist < best[0]:
-                best = [dist, flag]
+                best = [dist, i]
         if best:
             return best[1]
-
+    
     def move_towards(self, bot, x, y):
         dx = x - bot.x
         dy = y - bot.y
@@ -121,7 +120,6 @@ class Agent(object):
         elif angle > math.pi:
             angle -= 2 * math.pi
         return angle
-
 
 def main():
     # Process CLI arguments.

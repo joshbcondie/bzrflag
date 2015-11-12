@@ -3,6 +3,7 @@
 from bzrc import BZRC, Command, Answer
 import sys, math, time, random
 import grid_filter_gl
+import numpy as np
 
 class Agent(object):
 
@@ -16,25 +17,62 @@ class Agent(object):
                 self.base = Answer()
                 self.base.x = (base.corner1_x+base.corner3_x)/2
                 self.base.y = (base.corner1_y+base.corner3_y)/2
-        grid_filter_gl.init_window(50, 50)
+        # print int(self.constants['worldsize'])
+        grid_filter_gl.init_window(1000, 1000)
+        # self.grid = np.array([[[] for x in range(int(self.constants['worldsize']))] for x in range(int(self.constants['worldsize']))])
+        self.grid = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
+        self.tank={}
         self.update()
         self.past_position = {}
         self.goals = {}
         self.stuck = {}
+        # print self.grid
+        # print "tank location: x: "+str(self.tank.x)+" y: "+str(self.tank.y)
+
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
         self.set_flag_goals()
 
+    def normalizePoint(self,val):
+        return self.tank.x+int(self.constants['worldsize'])/2
+
+    def getTankY(self,val):
+        return self.tank.y+int(self.constants['worldsize'])/2
+
     def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks[:1]
+        self.tank = self.mytanks[0]
         self.othertanks = othertanks
         self.flags = flags
-        self.grid = self.bzrc.get_occgrid(0)[1]
-        grid_filter_gl.update_grid(self.grid)
-        grid_filter_gl.draw_grid()
+        # print self.grid
+        try:
+            for row in range(len(self.bzrc.get_occgrid(0)[1])):
+                # print "sensed grid length at beginning: "+str(len(self.bzrc.get_occgrid(0)[1]))
+                # print "row: "+str(row)
+                try:
+                    if row<(len(self.bzrc.get_occgrid(0)[1])-1):
+                        for col in range(len(self.bzrc.get_occgrid(0)[1][row])):
+                            # print "col: "+str(col)
+                            # print "tank x: "+str(self.tank.x)
+                            # print "tank y: "+str(self.tank.y)
+                            x=self.tank.x+row+int(self.constants['worldsize'])/2
+                            y=self.tank.y+col+int(self.constants['worldsize'])/2
+                            # print "x: "+str(x)
+                            # print "y: "+str(y)
+                            # print "value to set: "+str(self.bzrc.get_occgrid(0)[1][row][col])
+                            if x<800 and y<800 and row<(len(self.bzrc.get_occgrid(0)[1])-1):
+                                # print "sensed grid length: "+str(len(self.bzrc.get_occgrid(0)[1]))
+                                self.grid[x][y] = self.bzrc.get_occgrid(0)[1][row][col]
+                        # print "point set: "+str(self.grid[x][y])
+                except IndexError:
+                    print "Error: "+str(sys.exc_info()[0])
+            grid_filter_gl.update_grid(self.grid)
+            grid_filter_gl.draw_grid()
+        except:
+            print "Error: "+str(sys.exc_info()[0])
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
     def set_flag_goals(self):

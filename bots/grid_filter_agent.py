@@ -52,31 +52,11 @@ class Agent(object):
         self.othertanks = othertanks
         self.flags = flags
         # print self.grid
-        try:
-            for row in range(len(self.bzrc.get_occgrid(0)[1])):
-                # print "sensed grid length at beginning: "+str(len(self.bzrc.get_occgrid(0)[1]))
-                # print "row: "+str(row)
-                try:
-                    if row<(len(self.bzrc.get_occgrid(0)[1])-1):
-                        for col in range(len(self.bzrc.get_occgrid(0)[1][row])):
-                            # print "col: "+str(col)
-                            # print "tank x: "+str(self.tank.x)
-                            # print "tank y: "+str(self.tank.y)
-                            x=self.tank.x+row+int(self.constants['worldsize'])/2
-                            y=self.tank.y+col+int(self.constants['worldsize'])/2
-                            # print "x: "+str(x)
-                            # print "y: "+str(y)
-                            # print "value to set: "+str(self.bzrc.get_occgrid(0)[1][row][col])
-                            if x<800 and y<800 and row<(len(self.bzrc.get_occgrid(0)[1])-1):
-                                # print "sensed grid length: "+str(len(self.bzrc.get_occgrid(0)[1]))
-                                self.grid[x][y] = self.bzrc.get_occgrid(0)[1][row][col]
-                        # print "point set: "+str(self.grid[x][y])
-                except IndexError:
-                    print "Error: "+str(sys.exc_info()[0])
-            grid_filter_gl.update_grid(self.grid)
-            grid_filter_gl.draw_grid()
-        except:
-            print "Error: "+str(sys.exc_info()[0])
+        start_x, start_y = self.bzrc.get_occgrid(0)[0]
+        if mytanks[0].x > -300 and mytanks[0].x < 300 and mytanks[0].y > -300 and mytanks[0].y < 300:
+            self.grid[start_x+int(self.constants['worldsize'])/2 : start_x+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1]), start_y+int(self.constants['worldsize'])/2 : start_y++int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1][0])] = self.bzrc.get_occgrid(0)[1]
+        grid_filter_gl.update_grid(self.grid)
+        grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
     def tick(self, time_diff):

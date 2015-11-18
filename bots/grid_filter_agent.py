@@ -32,6 +32,8 @@ class Agent(object):
         self.past_position = {}
         self.goals = {}
         self.stuck = {}
+        self.last_x = 0
+        self.last_y = 0
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
@@ -80,24 +82,51 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
-            if self.timer > 10:
+            if self.timer > 50:
                 next_goal = self.next_goal(bot)
+                print 'next goal ' + str(self.points[next_goal][0]) + ', ' + str(self.points[next_goal][1])
                 self.goals[bot.index] = next_goal
+                self.timer = 0
             else:
                 self.timer += 1
 
         else:
+            if self.last_x == bot.x and self.last_y == bot.y:
+                self.timer += 1
+            self.last_x = bot.x
+            self.last_y = bot.y
+            if self.timer > 50:
+                print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
+                x,y = self.points[self.goals[bot.index]]
+                self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
+                if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
+                    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
+                    self.points.remove(self.points[self.goals[bot.index]])
+                    self.goals[bot.index] = None
+                else:
+                    self.timer = 0
+                return
             x,y = self.points[self.goals[bot.index]]
             dx = x - bot.x
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
             if dist < 30:
+                print 'reached goal ' + str(x) + ', ' + str(y)
                 self.points.remove(self.points[self.goals[bot.index]])
                 self.goals[bot.index] = None
                 self.bzrc.angvel(0, 0)
                 self.timer = 0
                 return
             self.move_to_position(bot, x, y)
+            
+            for x,y in self.points:
+                dx = x - bot.x
+                dy = y - bot.y
+                dist = math.sqrt(dx**2 + dy**2)
+                if dist < 30:
+                    self.points.remove((x, y))
+                    #TODO: make sure the index of the current goal isn't messed up by removing this other point
+                    print 'other point reached ' + str(x) + ', ' + str(y)
             #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     
     def move_to_position(self, bot, target_x, target_y):

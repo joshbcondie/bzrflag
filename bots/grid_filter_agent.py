@@ -54,7 +54,7 @@ class Agent(object):
         # print self.grid
         start_x, start_y = self.bzrc.get_occgrid(0)[0]
         try:
-            self.grid[start_y+int(self.constants['worldsize'])/2 : start_y+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1]), start_x+int(self.constants['worldsize'])/2 : start_x+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1][0])] = zip(*self.bzrc.get_occgrid(0)[1])
+            self.grid[start_y+int(self.constants['worldsize'])/2 : start_y+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1][0]), start_x+int(self.constants['worldsize'])/2 : start_x+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1])] = zip(*self.bzrc.get_occgrid(0)[1])
             # 
         except ValueError:
             pass

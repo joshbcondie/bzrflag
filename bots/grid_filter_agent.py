@@ -53,8 +53,10 @@ class Agent(object):
         self.flags = flags
         # print self.grid
         start_x, start_y = self.bzrc.get_occgrid(0)[0]
-        if mytanks[0].x > -300 and mytanks[0].x < 300 and mytanks[0].y > -300 and mytanks[0].y < 300:
+        try:
             self.grid[start_x+int(self.constants['worldsize'])/2 : start_x+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1]), start_y+int(self.constants['worldsize'])/2 : start_y++int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1][0])] = self.bzrc.get_occgrid(0)[1]
+        except ValueError:
+            pass
         grid_filter_gl.update_grid(self.grid)
         grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)

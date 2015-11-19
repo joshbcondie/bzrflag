@@ -18,13 +18,24 @@ class Agent(object):
                 self.base.x = (base.corner1_x+base.corner3_x)/2
                 self.base.y = (base.corner1_y+base.corner3_y)/2
         self.grid = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
+        self.previousOutput = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
         self.tank={}
         # print "tank location: x: "+str(self.tank.x)+" y: "+str(self.tank.y)
 
         grid_filter_gl.init_window(800, 800)
         self.grid_size = 100
         self.points = []
+        self.prior = .5
+        self.threshold = .5
+        self.posProb = float(self.constants['truepositive'])*self.prior/(float(self.constants['truepositive'])*self.prior + (1-float(self.constants['truenegative']))*(1-self.prior))
+        self.negProb = (1-float(self.constants['truepositive']))*(1-self.prior)/((1-float(self.constants['truepositive']))*self.prior + float(self.constants['truenegative'])*(1-self.prior))
         worldsize = int(self.constants['worldsize'])
+        if self.posProb>self.threshold:
+            self.truePos=True
+            print "When 1 is observed, assume 1"
+        else:
+            self.truePos=False
+            print "When 1 is observed, assume 0"
         for i in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
             for j in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
                 self.points.append((i, j))
@@ -53,11 +64,28 @@ class Agent(object):
         self.tank = self.mytanks[0]
         self.othertanks = othertanks
         self.flags = flags
-        # print self.grid
+        sensorData=zip(*self.bzrc.get_occgrid(0)[1])
         start_x, start_y = self.bzrc.get_occgrid(0)[0]
+        # print "row length: "+str(len(self.bzrc.get_occgrid(0)[1][0])-1) # 99
+        # print "col length: "+str(len(self.bzrc.get_occgrid(0)[1])-1) # 99
+        xStart=start_x+int(self.constants['worldsize'])/2
+        yStart=start_y+int(self.constants['worldsize'])/2
+        # try:
+        #     # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
+        #     #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
+        #     for row in range(self.grid_size):
+        #         for point in range(self.grid_size):
+        #             # Apply Bayes Rule on each point
+        #             if point==1 and self.truePos:
+        #                 self.grid[yStart+row][xStart+point]=1
+        #                 print "row: "+str(row)+" col: "+str(point)
+        #             else:
+        #                 self.grid[yStart+row][xStart+point]=0
+        # except ValueError:
+        #     print "error"
+        #     pass
         try:
-            self.grid[start_y+int(self.constants['worldsize'])/2 : start_y+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1][0]), start_x+int(self.constants['worldsize'])/2 : start_x+int(self.constants['worldsize'])/2+len(self.bzrc.get_occgrid(0)[1])] = zip(*self.bzrc.get_occgrid(0)[1])
-            # 
+            self.grid[yStart : yStart+len(self.bzrc.get_occgrid(0)[1][0]), xStart : xStart+len(self.bzrc.get_occgrid(0)[1])] = sensorData
         except ValueError:
             pass
         grid_filter_gl.update_grid(self.grid)

@@ -147,14 +147,17 @@ class Agent(object):
                 return
             self.move_to_position(bot, x, y)
             
-            for x,y in self.points:
+            for i in range(len(self.points)):
+                x,y = self.points[i]
                 dx = x - bot.x
                 dy = y - bot.y
                 dist = math.sqrt(dx**2 + dy**2)
                 if dist < 30:
+                    if i < self.goals[bot.index]:
+                        self.goals[bot.index] -= 1
                     self.points.remove((x, y))
-                    #TODO: make sure the index of the current goal isn't messed up by removing this other point
                     print 'other point reached ' + str(x) + ', ' + str(y)
+                    break
             #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     
     def move_to_position(self, bot, target_x, target_y):

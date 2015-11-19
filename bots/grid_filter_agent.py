@@ -112,8 +112,6 @@ class Agent(object):
         if self.goals[bot.index] is None:
             if self.timer > 1:
                 next_goal = self.next_goal(bot)
-                #TODO: remove error when all goals have been reached
-                print 'next goal ' + str(self.points[next_goal][0]) + ', ' + str(self.points[next_goal][1])
                 self.goals[bot.index] = next_goal
                 self.timer = 0
             else:

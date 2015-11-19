@@ -110,8 +110,9 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
-            if self.timer > 50:
+            if self.timer > 1:
                 next_goal = self.next_goal(bot)
+                #TODO: remove error when all goals have been reached
                 print 'next goal ' + str(self.points[next_goal][0]) + ', ' + str(self.points[next_goal][1])
                 self.goals[bot.index] = next_goal
                 self.timer = 0
@@ -179,7 +180,7 @@ class Agent(object):
         best = None
         for i in range(len(self.points)):
             x, y = self.points[i]
-            dist = math.sqrt((x - bot.x)**2 + (y - bot.y)**2)
+            dist = math.sqrt((x - (bot.x + bot.vx * 2))**2 + (y - (bot.y + bot.vy * 2))**2)
             if not best or dist < best[0]:
                 best = [dist, i]
         if best:

@@ -110,12 +110,8 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
-            if self.timer > 1:
-                next_goal = self.next_goal(bot)
-                self.goals[bot.index] = next_goal
-                self.timer = 0
-            else:
-                self.timer += 1
+            next_goal = self.next_goal(bot)
+            self.goals[bot.index] = next_goal
 
         else:
             if self.last_x == bot.x and self.last_y == bot.y:
@@ -130,8 +126,7 @@ class Agent(object):
                     print 'completely removed obstacle ' + str(x) + ', ' + str(y)
                     self.points.remove(self.points[self.goals[bot.index]])
                     self.goals[bot.index] = None
-                else:
-                    self.timer = 0
+                self.timer = 0
                 return
             x,y = self.points[self.goals[bot.index]]
             dx = x - bot.x
@@ -142,7 +137,6 @@ class Agent(object):
                 self.points.remove(self.points[self.goals[bot.index]])
                 self.goals[bot.index] = None
                 self.bzrc.angvel(0, 0)
-                self.timer = 0
                 return
             self.move_to_position(bot, x, y)
             

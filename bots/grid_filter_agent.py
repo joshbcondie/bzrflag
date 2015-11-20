@@ -43,11 +43,13 @@ class Agent(object):
         self.past_position = {}
         self.goals = {}
         self.stuck = {}
+        self.stuck_count = 0
         self.last_x = 0
         self.last_y = 0
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
+            self.bzrc.speed(tank.index, 1)
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
         self.update()
@@ -118,14 +120,23 @@ class Agent(object):
                 self.timer += 1
             self.last_x = bot.x
             self.last_y = bot.y
-            if self.timer > 50:
+            if self.timer > 10:
                 print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
-                x,y = self.points[self.goals[bot.index]]
-                self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
-                if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
-                    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
-                    self.points.remove(self.points[self.goals[bot.index]])
-                    self.goals[bot.index] = None
+                self.stuck_count += 1
+                last_goal = self.goals[bot.index]
+                self.goals[bot.index] = self.random_goal(bot, last_goal)
+                if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                    scale = random.uniform(2, 10)
+                    if random.uniform(0, 1) < 0.5:
+                        scale *= -1
+                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
+                    self.goals[bot.index] = len(self.points) - 1
+                    print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
+                #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
+                #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
+                #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
+                #    self.points.remove(self.points[self.goals[bot.index]])
+                #    self.goals[bot.index] = None
                 self.timer = 0
                 return
             x,y = self.points[self.goals[bot.index]]
@@ -134,6 +145,8 @@ class Agent(object):
             dist = math.sqrt(dx**2 + dy**2)
             if dist < 30:
                 print 'reached goal ' + str(x) + ', ' + str(y)
+                if self.goals[bot.index] < len(self.points) - 1:
+                    self.stuck_count = 0
                 self.points.remove(self.points[self.goals[bot.index]])
                 self.goals[bot.index] = None
                 self.bzrc.angvel(0, 0)
@@ -160,19 +173,31 @@ class Agent(object):
         command = Command(bot.index, 1, 2 * relative_angle, True)
         self.commands.append(command)
 
-    def random_pos(self):
-        width = int(self.constants['worldsize'])
-        x = random.randrange(width) - width/2
-        y = random.randrange(width) - width/2
-        return x,y
-
     def next_goal(self, bot):
         #if self.goals[bot.index] is not None:
         #    self.points.remove(self.points[self.goals[bot.index]])
         best = None
         for i in range(len(self.points)):
             x, y = self.points[i]
-            dist = math.sqrt((x - (bot.x + bot.vx * 2))**2 + (y - (bot.y + bot.vy * 2))**2)
+            if self.stuck_count > 2:
+                scale = random.uniform(2, 15)
+            else:
+                scale = 2
+            dist = math.sqrt((x - (bot.x + bot.vx * scale))**2 + (y - (bot.y + bot.vy * scale))**2)
+            if not best or dist < best[0]:
+                best = [dist, i]
+        if best:
+            return best[1]
+    
+    def random_goal(self, bot, current_goal):
+        best = None
+        for i in range(len(self.points)):
+            x, y = self.points[i]
+            if random.uniform(0, 1) < 0.5:
+                scale = -10
+            else:
+                scale = 10
+            dist = math.sqrt((x - (bot.x - bot.vy * scale))**2 + (y - (bot.y + bot.vx * scale))**2)
             if not best or dist < best[0]:
                 best = [dist, i]
         if best:

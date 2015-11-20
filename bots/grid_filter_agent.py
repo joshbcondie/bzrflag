@@ -21,7 +21,6 @@ class Agent(object):
         self.previousOutput = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
         self.tank={}
         # print "tank location: x: "+str(self.tank.x)+" y: "+str(self.tank.y)
-
         grid_filter_gl.init_window(800, 800)
         self.grid_size = 100
         self.points = []
@@ -41,32 +40,26 @@ class Agent(object):
         self.last_x = 0
         self.last_y = 0
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
+        numTanks=1
+        self.mytanks = self.mytanks[:numTanks]
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
             self.bzrc.speed(tank.index, 1)
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
-        self.update()
+            self.update(tank.index)
 
-    def normalizePoint(self,val):
-        return self.tank.x+int(self.constants['worldsize'])/2
-
-    def getTankY(self,val):
-        return self.tank.y+int(self.constants['worldsize'])/2
-
-    def update(self):
+    def update(self, tankNum):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        self.mytanks = mytanks[:1]
-        self.tank = self.mytanks[0]
-        self.othertanks = othertanks
+        # self.mytanks = mytanks[:1]
         self.flags = flags
-        sensorData=zip(*self.bzrc.get_occgrid(0)[1])
-        start_x, start_y = self.bzrc.get_occgrid(0)[0]
+        print self.bzrc.get_occgrid(tankNum)
+        sensorData=zip(*self.bzrc.get_occgrid(tankNum)[1])
+        start_x, start_y = self.bzrc.get_occgrid(tankNum)[0]
         # print "row length: "+str(len(self.bzrc.get_occgrid(0)[1][0])-1) # 99
         # print "col length: "+str(len(self.bzrc.get_occgrid(0)[1])-1) # 99
         xStart=start_x+int(self.constants['worldsize'])/2
         yStart=start_y+int(self.constants['worldsize'])/2
-        print "prior: "+str(self.prior)
         try:
             # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
             #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
@@ -104,7 +97,8 @@ class Agent(object):
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
-        self.update()
+        for tank in self.mytanks:
+            self.update(tank.index)
 
         # Reset my set of commands (we don't want to run old commands)
         self.commands = []
@@ -128,7 +122,7 @@ class Agent(object):
             self.last_x = bot.x
             self.last_y = bot.y
             if self.timer > 10:
-                print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
+                # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
                 self.stuck_count += 1
                 last_goal = self.goals[bot.index]
                 self.goals[bot.index] = self.random_goal(bot, last_goal)
@@ -138,7 +132,7 @@ class Agent(object):
                         scale *= -1
                     self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
                     self.goals[bot.index] = len(self.points) - 1
-                    print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
+                    # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
                 #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
                 #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
                 #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
@@ -151,7 +145,7 @@ class Agent(object):
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
             if dist < 30:
-                print 'reached goal ' + str(x) + ', ' + str(y)
+                # print 'reached goal ' + str(x) + ', ' + str(y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
                 self.points.remove(self.points[self.goals[bot.index]])
@@ -169,7 +163,7 @@ class Agent(object):
                     if i < self.goals[bot.index]:
                         self.goals[bot.index] -= 1
                     self.points.remove((x, y))
-                    print 'other point reached ' + str(x) + ', ' + str(y)
+                    # print 'other point reached ' + str(x) + ', ' + str(y)
                     break
             #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     

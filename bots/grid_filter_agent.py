@@ -18,6 +18,9 @@ class Agent(object):
                 self.base.x = (base.corner1_x+base.corner3_x)/2
                 self.base.y = (base.corner1_y+base.corner3_y)/2
         self.grid = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
+        for row in range(len(self.grid)):
+            for col in range(len(self.grid)):
+                self.grid[row][col]=.5
         self.previousOutput = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
         self.tank={}
         # print "tank location: x: "+str(self.tank.x)+" y: "+str(self.tank.y)
@@ -53,7 +56,7 @@ class Agent(object):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         # self.mytanks = mytanks[:1]
         self.flags = flags
-        print self.bzrc.get_occgrid(tankNum)
+        # print self.bzrc.get_occgrid(tankNum)
         sensorData=zip(*self.bzrc.get_occgrid(tankNum)[1])
         start_x, start_y = self.bzrc.get_occgrid(tankNum)[0]
         # print "row length: "+str(len(self.bzrc.get_occgrid(0)[1][0])-1) # 99
@@ -70,13 +73,12 @@ class Agent(object):
                     for point in row:
                         # Apply Bayes Rule on each point and get the new prior.
                         if point==1:
-                            self.prior=self.trueP*self.prior/(self.trueP*self.prior + (1-self.trueN)*(1-self.prior))
+                            prior=self.trueP*self.grid[yStart+y][xStart+x]/(self.trueP*self.grid[yStart+y][xStart+x] + (1-self.trueN)*(1-self.grid[yStart+y][xStart+x]))
+                        # print self.grid[yStart+y][xStart+x]
                         else:
-                            self.prior=(1-self.trueP)*(1-self.prior)/((1-self.trueP)*self.prior + self.trueN*(1-self.prior))
-                        if self.prior>self.threshold:
-                            self.grid[yStart+y][xStart+x]=1
-                        else:
-                            self.grid[yStart+y][xStart+x]=0
+                            prior=(1-self.trueP)*(1-self.grid[yStart+y][xStart+x])/((1-self.trueP)*self.grid[yStart+y][xStart+x] + self.trueN*(1-self.grid[yStart+y][xStart+x]))
+                        # print prior
+                        self.grid[yStart+y][xStart+x]=prior
                         x+=1
                     y+=1
                     x=0

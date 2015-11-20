@@ -27,15 +27,9 @@ class Agent(object):
         self.points = []
         self.prior = .5
         self.threshold = .5
-        self.posProb = float(self.constants['truepositive'])*self.prior/(float(self.constants['truepositive'])*self.prior + (1-float(self.constants['truenegative']))*(1-self.prior))
-        self.negProb = (1-float(self.constants['truepositive']))*(1-self.prior)/((1-float(self.constants['truepositive']))*self.prior + float(self.constants['truenegative'])*(1-self.prior))
+        self.trueP=float(self.constants['truepositive'])
+        self.trueN=float(self.constants['truenegative'])
         worldsize = int(self.constants['worldsize'])
-        if self.posProb>self.threshold:
-            self.truePos=True
-            print "When 1 is observed, assume 1"
-        else:
-            self.truePos=False
-            print "When 1 is observed, assume 0"
         for i in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
             for j in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
                 self.points.append((i, j))
@@ -72,24 +66,37 @@ class Agent(object):
         # print "col length: "+str(len(self.bzrc.get_occgrid(0)[1])-1) # 99
         xStart=start_x+int(self.constants['worldsize'])/2
         yStart=start_y+int(self.constants['worldsize'])/2
-        # try:
-        #     # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
-        #     #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
-        #     for row in range(self.grid_size):
-        #         for point in range(self.grid_size):
-        #             # Apply Bayes Rule on each point
-        #             if point==1 and self.truePos:
-        #                 self.grid[yStart+row][xStart+point]=1
-        #                 print "row: "+str(row)+" col: "+str(point)
-        #             else:
-        #                 self.grid[yStart+row][xStart+point]=0
-        # except ValueError:
-        #     print "error"
-        #     pass
+        print "prior: "+str(self.prior)
         try:
-            self.grid[yStart : yStart+len(self.bzrc.get_occgrid(0)[1][0]), xStart : xStart+len(self.bzrc.get_occgrid(0)[1])] = sensorData
+            # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
+            #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
+            y=0
+            x=0
+            for row in sensorData:
+                try:
+                    for point in row:
+                        # Apply Bayes Rule on each point and get the new prior.
+                        if point==1:
+                            self.prior=self.trueP*self.prior/(self.trueP*self.prior + (1-self.trueN)*(1-self.prior))
+                        else:
+                            self.prior=(1-self.trueP)*(1-self.prior)/((1-self.trueP)*self.prior + self.trueN*(1-self.prior))
+                        if self.prior>self.threshold:
+                            self.grid[yStart+y][xStart+x]=1
+                        else:
+                            self.grid[yStart+y][xStart+x]=0
+                        x+=1
+                    y+=1
+                    x=0
+                except IndexError:
+                    continue
+
         except ValueError:
+            print "error"
             pass
+        # try:
+        #     self.grid[yStart : yStart+len(self.bzrc.get_occgrid(0)[1][0]), xStart : xStart+len(self.bzrc.get_occgrid(0)[1])] = sensorData
+        # except ValueError:
+        #     pass
         grid_filter_gl.update_grid(self.grid)
         grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)

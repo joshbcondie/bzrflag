@@ -29,6 +29,8 @@ class Agent(object):
         self.points = []
         self.prior = .5
         self.threshold = .5
+        self.chosenX=0
+        self.chosenY=0
         self.trueP=float(self.constants['truepositive'])
         self.trueN=float(self.constants['truenegative'])
         worldsize = int(self.constants['worldsize'])
@@ -57,7 +59,10 @@ class Agent(object):
         # self.mytanks = mytanks[:1]
         self.flags = flags
         # print self.bzrc.get_occgrid(tankNum)
-        sensorData=zip(*self.bzrc.get_occgrid(tankNum)[1])
+        try:
+            sensorData=zip(*self.bzrc.get_occgrid(tankNum)[1])
+        except:
+            print "error"
         start_x, start_y = self.bzrc.get_occgrid(tankNum)[0]
         # print "row length: "+str(len(self.bzrc.get_occgrid(0)[1][0])-1) # 99
         # print "col length: "+str(len(self.bzrc.get_occgrid(0)[1])-1) # 99
@@ -71,14 +76,25 @@ class Agent(object):
             for row in sensorData:
                 try:
                     for point in row:
+                        if self.chosenX==0 and self.chosenY==0:
+                            self.chosenY=yStart+y
+                            self.chosenX=xStart+x
                         # Apply Bayes Rule on each point and get the new prior.
+                        prior=self.grid[yStart+y][xStart+x]
+                        # point=0
                         if point==1:
-                            prior=self.trueP*self.grid[yStart+y][xStart+x]/(self.trueP*self.grid[yStart+y][xStart+x] + (1-self.trueN)*(1-self.grid[yStart+y][xStart+x]))
-                        # print self.grid[yStart+y][xStart+x]
-                        else:
-                            prior=(1-self.trueP)*(1-self.grid[yStart+y][xStart+x])/((1-self.trueP)*self.grid[yStart+y][xStart+x] + self.trueN*(1-self.grid[yStart+y][xStart+x]))
+                            posterior=self.trueP*prior/(self.trueP*prior + (1-self.trueN)*(1-prior))
                         # print prior
-                        self.grid[yStart+y][xStart+x]=prior
+                        else:
+                            posterior=(1-self.trueP)*prior/((1-self.trueP)*prior + self.trueN*(1-prior))
+                        self.grid[yStart+y][xStart+x]=posterior
+                        # print str(self.chosenY)+"  "+str(self.chosenX)
+                        # if xStart+x==self.chosenX and yStart+y==self.chosenY:
+                        #     print "posterior: "+str(posterior)
+                        #     if point==1:
+                        #         print "("+str(self.trueP)+"*"+str(prior)+"/("+str(self.trueP)+"*"+str(prior)+"(1-"+str(self.trueN)+")*(1-"+str(prior)+"))"
+                        #     # print prior
+                        #     print "posterior: "+str(self.grid[self.chosenY][self.chosenX])
                         x+=1
                     y+=1
                     x=0

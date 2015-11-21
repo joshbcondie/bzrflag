@@ -31,6 +31,7 @@ class Agent(object):
         self.threshold = .5
         self.chosenX=0
         self.chosenY=0
+        self.needGoal=True
         self.trueP=float(self.constants['truepositive'])
         self.trueN=float(self.constants['truenegative'])
         worldsize = int(self.constants['worldsize'])
@@ -74,32 +75,32 @@ class Agent(object):
             y=0
             x=0
             for row in sensorData:
-                try:
                     for point in row:
-                        if self.chosenX==0 and self.chosenY==0:
-                            self.chosenY=yStart+y
-                            self.chosenX=xStart+x
-                        # Apply Bayes Rule on each point and get the new prior.
-                        prior=self.grid[yStart+y][xStart+x]
-                        # point=0
-                        if point==1:
-                            posterior=self.trueP*prior/(self.trueP*prior + (1-self.trueN)*(1-prior))
-                        # print prior
-                        else:
-                            posterior=(1-self.trueP)*prior/((1-self.trueP)*prior + self.trueN*(1-prior))
-                        self.grid[yStart+y][xStart+x]=posterior
-                        # print str(self.chosenY)+"  "+str(self.chosenX)
-                        # if xStart+x==self.chosenX and yStart+y==self.chosenY:
-                        #     print "posterior: "+str(posterior)
-                        #     if point==1:
-                        #         print "("+str(self.trueP)+"*"+str(prior)+"/("+str(self.trueP)+"*"+str(prior)+"(1-"+str(self.trueN)+")*(1-"+str(prior)+"))"
-                        #     # print prior
-                        #     print "posterior: "+str(self.grid[self.chosenY][self.chosenX])
-                        x+=1
+                        try:
+                            if self.chosenX==0 and self.chosenY==0:
+                                self.chosenY=yStart+y
+                                self.chosenX=xStart+x
+                            # Apply Bayes Rule on each point and get the new prior.
+                            prior=self.grid[yStart+y][xStart+x]
+                            # point=0
+                            if point==1:
+                                posterior=self.trueP*prior/(self.trueP*prior + (1-self.trueN)*(1-prior))
+                            # print prior
+                            else:
+                                posterior=(1-self.trueP)*prior/((1-self.trueP)*prior + self.trueN*(1-prior))
+                            self.grid[yStart+y][xStart+x]=posterior
+                            # print str(self.chosenY)+"  "+str(self.chosenX)
+                            # if xStart+x==self.chosenX and yStart+y==self.chosenY:
+                            #     print "posterior: "+str(posterior)
+                            #     if point==1:
+                            #         print "("+str(self.trueP)+"*"+str(prior)+"/("+str(self.trueP)+"*"+str(prior)+"(1-"+str(self.trueN)+")*(1-"+str(prior)+"))"
+                            #     # print prior
+                            #     print "posterior: "+str(self.grid[self.chosenY][self.chosenX])
+                            x+=1
+                        except IndexError:
+                            continue
                     y+=1
                     x=0
-                except IndexError:
-                    continue
 
         except ValueError:
             print "error"
@@ -112,8 +113,7 @@ class Agent(object):
         grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
-    def tick(self, time_diff):
-
+    def tick(self, time_diff, count):
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
         for tank in self.mytanks:
@@ -123,6 +123,7 @@ class Agent(object):
         self.commands = []
 
         # Decide what to do with each of my tanks
+
         for bot in self.mytanks:
             self.update_goal(bot)
             self.past_position[bot.index] = bot.x, bot.y
@@ -132,64 +133,67 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
+            print "goals are none"
             next_goal = self.next_goal(bot)
             self.goals[bot.index] = next_goal
 
         else:
             y=0
             x=0
-            while True:
-                if self.last_x == bot.x and self.last_y == bot.y:
-                    self.timer += 1
+            if self.last_x == bot.x and self.last_y == bot.y:
+                self.timer += 1
+            else:
+                self.timer=0
+            if self.timer==0:
                 self.last_x = bot.x
                 self.last_y = bot.y
-                if self.timer > 10:
-                    # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
-                    self.stuck_count += 1
-                    last_goal = self.goals[bot.index]
-                    self.goals[bot.index] = self.random_goal(bot, last_goal)
-                    if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
-                        scale = random.uniform(2, 10)
-                        if random.uniform(0, 1) < 0.5:
-                            scale *= -1
-                        self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
-                        self.goals[bot.index] = len(self.points) - 1
-                        # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
-                    #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
-                    #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
-                    #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
-                    #    self.points.remove(self.points[self.goals[bot.index]])
-                    #    self.goals[bot.index] = None
-                    self.timer = 0
-                    if self.grid[y][x] == .5:
-                        return
-
-                x,y = self.points[self.goals[bot.index]]
-                if self.grid[y][x] == .5:
-                    break
-                # print self.grid[y][x]
-                # print "y: "+str(y)+" x: "+str(x)
             if self.timer > 10:
-                return
+                # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
+                self.stuck_count += 1
+                last_goal = self.goals[bot.index]
+                self.goals[bot.index] = self.random_goal(bot, last_goal)
+                if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                    scale = random.uniform(2, 10)
+                    if random.uniform(0, 1) < 0.5:
+                        scale *= -1
+                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
+                    self.goals[bot.index] = len(self.points) - 1
+                    # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
+                #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
+                #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
+                #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
+                #    self.points.remove(self.points[self.goals[bot.index]])
+                #    self.goals[bot.index] = None
+                self.timer = 0
+                if self.grid[y][x] == .5:
+                    return
+                # self.points.remove(self.points[self.goals[bot.index]])
+            x,y = self.points[self.goals[bot.index]]
+                # self.points.remove(self.points[self.goals[bot.index]])
+                # print "y: "+str(y)+" x: "+str(x)
+            self.move_to_position(bot, x, y)
+                # print self.grid[y][x]
             dx = x - bot.x
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
-            if dist < 100 or self.grid[y][x] != .5:
-                # print 'reached goal ' + str(x) + ', ' + str(y)
+            if dist < 50 or self.grid[y][x] != .5:
+                print 'reached goal ' + str(x) + ', ' + str(y)
+                print "bot is at x: "+str(bot.x)+" y: "+str(bot.y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
-                self.points.remove(self.points[self.goals[bot.index]])
+                if bot.index<len(self.goals) and self.goals[bot.index]<len(self.points):
+                    self.points.remove(self.points[self.goals[bot.index]])
                 self.goals[bot.index] = None
                 self.bzrc.angvel(0, 0)
+                self.needGoal=True
                 return
-            self.move_to_position(bot, x, y)
             
             for i in range(len(self.points)):
                 x,y = self.points[i]
                 dx = x - bot.x
                 dy = y - bot.y
                 dist = math.sqrt(dx**2 + dy**2)
-                if dist < 100:
+                if dist < 50:
                     if i < self.goals[bot.index]:
                         self.goals[bot.index] -= 1
                     self.points.remove((x, y))
@@ -201,7 +205,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - bot.y,
                 target_x - bot.x)
         relative_angle = self.normalize_angle(target_angle - bot.angle)
-        command = Command(bot.index, 1, 2 * relative_angle, True)
+        command = Command(bot.index, 1, .5*relative_angle, True)
         self.commands.append(command)
 
     def next_goal(self, bot):
@@ -225,11 +229,11 @@ class Agent(object):
         for i in range(len(self.points)):
             x, y = self.points[i]
             if random.uniform(0, 1) < 0.5:
-                scale = -10
+                scale = -100
             else:
-                scale = 10
+                scale = 100
             dist = math.sqrt((x - (bot.x - bot.vy * scale))**2 + (y - (bot.y + bot.vx * scale))**2)
-            if not best or dist < best[0]:
+            if not best or dist > best[0]:
                 best = [dist, i]
         if best:
             return best[1]
@@ -267,10 +271,16 @@ def main():
     prev_time = time.time()
 
     # Run the agent
+    count=0
     try:
         while True:
             time_diff = time.time() - prev_time
-            agent.tick(time_diff)
+            prev_time=time.time()
+            agent.tick(time_diff, count)
+            count+=1
+            if count>10:
+                count=0
+
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()

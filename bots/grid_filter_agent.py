@@ -113,6 +113,7 @@ class Agent(object):
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
     def tick(self, time_diff):
+
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
         for tank in self.mytanks:
@@ -135,34 +136,45 @@ class Agent(object):
             self.goals[bot.index] = next_goal
 
         else:
-            if self.last_x == bot.x and self.last_y == bot.y:
-                self.timer += 1
-            self.last_x = bot.x
-            self.last_y = bot.y
+            y=0
+            x=0
+            while True:
+                if self.last_x == bot.x and self.last_y == bot.y:
+                    self.timer += 1
+                self.last_x = bot.x
+                self.last_y = bot.y
+                if self.timer > 10:
+                    # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
+                    self.stuck_count += 1
+                    last_goal = self.goals[bot.index]
+                    self.goals[bot.index] = self.random_goal(bot, last_goal)
+                    if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                        scale = random.uniform(2, 10)
+                        if random.uniform(0, 1) < 0.5:
+                            scale *= -1
+                        self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
+                        self.goals[bot.index] = len(self.points) - 1
+                        # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
+                    #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
+                    #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
+                    #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
+                    #    self.points.remove(self.points[self.goals[bot.index]])
+                    #    self.goals[bot.index] = None
+                    self.timer = 0
+                    if self.grid[y][x] == .5:
+                        return
+
+                x,y = self.points[self.goals[bot.index]]
+                if self.grid[y][x] == .5:
+                    break
+                # print self.grid[y][x]
+                # print "y: "+str(y)+" x: "+str(x)
             if self.timer > 10:
-                # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
-                self.stuck_count += 1
-                last_goal = self.goals[bot.index]
-                self.goals[bot.index] = self.random_goal(bot, last_goal)
-                if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
-                    scale = random.uniform(2, 10)
-                    if random.uniform(0, 1) < 0.5:
-                        scale *= -1
-                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
-                    self.goals[bot.index] = len(self.points) - 1
-                    # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
-                #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
-                #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
-                #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
-                #    self.points.remove(self.points[self.goals[bot.index]])
-                #    self.goals[bot.index] = None
-                self.timer = 0
                 return
-            x,y = self.points[self.goals[bot.index]]
             dx = x - bot.x
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
-            if dist < 30:
+            if dist < 100 or self.grid[y][x] != .5:
                 # print 'reached goal ' + str(x) + ', ' + str(y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
@@ -177,7 +189,7 @@ class Agent(object):
                 dx = x - bot.x
                 dy = y - bot.y
                 dist = math.sqrt(dx**2 + dy**2)
-                if dist < 30:
+                if dist < 100:
                     if i < self.goals[bot.index]:
                         self.goals[bot.index] -= 1
                     self.points.remove((x, y))
@@ -203,7 +215,7 @@ class Agent(object):
             else:
                 scale = 2
             dist = math.sqrt((x - (bot.x + bot.vx * scale))**2 + (y - (bot.y + bot.vy * scale))**2)
-            if not best or dist < best[0]:
+            if not best or dist > best[0]:
                 best = [dist, i]
         if best:
             return best[1]

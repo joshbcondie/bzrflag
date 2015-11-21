@@ -133,7 +133,7 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
-            print "goals are none"
+            # print "goals are none"
             next_goal = self.next_goal(bot)
             self.goals[bot.index] = next_goal
 
@@ -177,8 +177,8 @@ class Agent(object):
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
             if dist < 50 or self.grid[y][x] != .5:
-                print 'reached goal ' + str(x) + ', ' + str(y)
-                print "bot is at x: "+str(bot.x)+" y: "+str(bot.y)
+                # print 'reached goal ' + str(x) + ', ' + str(y)
+                # print "bot is at x: "+str(bot.x)+" y: "+str(bot.y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
                 if bot.index<len(self.goals) and self.goals[bot.index]<len(self.points):

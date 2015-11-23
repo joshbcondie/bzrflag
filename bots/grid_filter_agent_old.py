@@ -18,23 +18,24 @@ class Agent(object):
                 self.base.x = (base.corner1_x+base.corner3_x)/2
                 self.base.y = (base.corner1_y+base.corner3_y)/2
         self.grid = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
-        for row in range(len(self.grid)):
-            for col in range(len(self.grid)):
-                self.grid[row][col]=.5
         self.previousOutput = np.zeros(shape=(int(self.constants['worldsize']),int(self.constants['worldsize'])))
         self.tank={}
         # print "tank location: x: "+str(self.tank.x)+" y: "+str(self.tank.y)
+
         grid_filter_gl.init_window(800, 800)
         self.grid_size = 100
         self.points = []
         self.prior = .5
         self.threshold = .5
-        self.chosenX=0
-        self.chosenY=0
-        self.needGoal=True
-        self.trueP=float(self.constants['truepositive'])
-        self.trueN=float(self.constants['truenegative'])
+        self.posProb = float(self.constants['truepositive'])*self.prior/(float(self.constants['truepositive'])*self.prior + (1-float(self.constants['truenegative']))*(1-self.prior))
+        self.negProb = (1-float(self.constants['truepositive']))*(1-self.prior)/((1-float(self.constants['truepositive']))*self.prior + float(self.constants['truenegative'])*(1-self.prior))
         worldsize = int(self.constants['worldsize'])
+        if self.posProb>self.threshold:
+            self.truePos=True
+            print "When 1 is observed, assume 1"
+        else:
+            self.truePos=False
+            print "When 1 is observed, assume 0"
         for i in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
             for j in range(self.grid_size / 2 - worldsize / 2, worldsize / 2, self.grid_size):
                 self.points.append((i, j))
@@ -51,77 +52,57 @@ class Agent(object):
             self.bzrc.speed(tank.index, 1)
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
-        self.update(0)
+        self.update()
 
-    def update(self, tankNum):
+    def normalizePoint(self,val):
+        return self.tank.x+int(self.constants['worldsize'])/2
+
+    def getTankY(self,val):
+        return self.tank.y+int(self.constants['worldsize'])/2
+
+    def update(self):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks[:1]
+        self.tank = self.mytanks[0]
+        self.othertanks = othertanks
         self.flags = flags
-        # print self.bzrc.get_occgrid(tankNum)
-        try:
-            sensorData=zip(*self.bzrc.get_occgrid(tankNum)[1])
-        except:
-            print "error"
-        start_x, start_y = self.bzrc.get_occgrid(tankNum)[0]
+        sensorData=zip(*self.bzrc.get_occgrid(0)[1])
+        start_x, start_y = self.bzrc.get_occgrid(0)[0]
         # print "row length: "+str(len(self.bzrc.get_occgrid(0)[1][0])-1) # 99
         # print "col length: "+str(len(self.bzrc.get_occgrid(0)[1])-1) # 99
         xStart=start_x+int(self.constants['worldsize'])/2
         yStart=start_y+int(self.constants['worldsize'])/2
-        try:
-            # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
-            #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
-            y=0
-            x=0
-            for row in sensorData:
-                    for point in row:
-                        try:
-                            if self.chosenX==0 and self.chosenY==0:
-                                self.chosenY=yStart+y
-                                self.chosenX=xStart+x
-                            # Apply Bayes Rule on each point and get the new prior.
-                            prior=self.grid[yStart+y][xStart+x]
-                            # point=0
-                            if point==1:
-                                posterior=self.trueP*prior/(self.trueP*prior + (1-self.trueN)*(1-prior))
-                            # print prior
-                            else:
-                                posterior=(1-self.trueP)*prior/((1-self.trueP)*prior + self.trueN*(1-prior))
-                            self.grid[yStart+y][xStart+x]=posterior
-                            # print str(self.chosenY)+"  "+str(self.chosenX)
-                            # if xStart+x==self.chosenX and yStart+y==self.chosenY:
-                            #     print "posterior: "+str(posterior)
-                            #     if point==1:
-                            #         print "("+str(self.trueP)+"*"+str(prior)+"/("+str(self.trueP)+"*"+str(prior)+"(1-"+str(self.trueN)+")*(1-"+str(prior)+"))"
-                            #     # print prior
-                            #     print "posterior: "+str(self.grid[self.chosenY][self.chosenX])
-                            x+=1
-                        except IndexError:
-                            continue
-                    y+=1
-                    x=0
-
-        except ValueError:
-            print "error"
-            pass
         # try:
-        #     self.grid[yStart : yStart+len(self.bzrc.get_occgrid(0)[1][0]), xStart : xStart+len(self.bzrc.get_occgrid(0)[1])] = sensorData
+        #     # for row in range(len(self.bzrc.get_occgrid(0)[1][0])):
+        #     #     for point in range(len(self.bzrc.get_occgrid(0)[1])):
+        #     for row in range(self.grid_size):
+        #         for point in range(self.grid_size):
+        #             # Apply Bayes Rule on each point
+        #             if point==1 and self.truePos:
+        #                 self.grid[yStart+row][xStart+point]=1
+        #                 print "row: "+str(row)+" col: "+str(point)
+        #             else:
+        #                 self.grid[yStart+row][xStart+point]=0
         # except ValueError:
+        #     print "error"
         #     pass
+        try:
+            self.grid[yStart : yStart+len(self.bzrc.get_occgrid(0)[1][0]), xStart : xStart+len(self.bzrc.get_occgrid(0)[1])] = sensorData
+        except ValueError:
+            pass
         grid_filter_gl.update_grid(self.grid)
         grid_filter_gl.draw_grid()
         #occg = list(self.bzrc.get_occgrid(i.index) for i in self.mytanks)
 
-    def tick(self, time_diff, count):
+    def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
-        for tank in self.mytanks:
-            self.update(tank.index)
+        self.update()
 
         # Reset my set of commands (we don't want to run old commands)
         self.commands = []
 
         # Decide what to do with each of my tanks
-
         for bot in self.mytanks:
             self.update_goal(bot)
             self.past_position[bot.index] = bot.x, bot.y
@@ -137,12 +118,10 @@ class Agent(object):
         else:
             if self.last_x == bot.x and self.last_y == bot.y:
                 self.timer += 1
-            else:
-                self.timer = 0
             self.last_x = bot.x
             self.last_y = bot.y
             if self.timer > 10:
-                # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
+                print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
                 self.stuck_count += 1
                 last_goal = self.goals[bot.index]
                 self.goals[bot.index] = self.random_goal(bot, last_goal)
@@ -152,7 +131,7 @@ class Agent(object):
                         scale *= -1
                     self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
                     self.goals[bot.index] = len(self.points) - 1
-                    # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
+                    print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
                 #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
                 #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
                 #    print 'completely removed obstacle ' + str(x) + ', ' + str(y)
@@ -165,7 +144,7 @@ class Agent(object):
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
             if dist < 30:
-                # print 'reached goal ' + str(x) + ', ' + str(y)
+                print 'reached goal ' + str(x) + ', ' + str(y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
                 self.points.remove(self.points[self.goals[bot.index]])
@@ -183,7 +162,7 @@ class Agent(object):
                     if i < self.goals[bot.index]:
                         self.goals[bot.index] -= 1
                     self.points.remove((x, y))
-                    # print 'other point reached ' + str(x) + ', ' + str(y)
+                    print 'other point reached ' + str(x) + ', ' + str(y)
                     break
             #self.commands.append(GoodrichCommand(bot.index, dx/5, dy/5))
     
@@ -257,16 +236,10 @@ def main():
     prev_time = time.time()
 
     # Run the agent
-    count=0
     try:
         while True:
             time_diff = time.time() - prev_time
-            prev_time=time.time()
-            agent.tick(time_diff, count)
-            count+=1
-            if count>10:
-                count=0
-
+            agent.tick(time_diff)
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()

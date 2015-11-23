@@ -146,12 +146,14 @@ class Agent(object):
                 self.stuck_count += 1
                 last_goal = self.goals[bot.index]
                 self.goals[bot.index] = self.random_goal(bot, last_goal)
-                if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                if self.stuck_count > 3:
                     scale = random.uniform(2, 10)
                     if random.uniform(0, 1) < 0.5:
                         scale *= -1
-                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
+                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-50, 50))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-50, 50)))))
                     self.goals[bot.index] = len(self.points) - 1
+                elif self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                    self.goals[bot.index] = random.randint(0, len(self.points) - 1)
                     # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
                 #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
                 #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:

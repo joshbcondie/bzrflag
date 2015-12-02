@@ -46,18 +46,16 @@ class Agent(object):
         self.last_x = 0
         self.last_y = 0
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        numTanks=1
-        self.mytanks = self.mytanks[:numTanks]
         for tank in self.mytanks:
             self.past_position[tank.index] = tank.x, tank.y
             self.bzrc.speed(tank.index, 1)
             self.goals[tank.index] = None
             self.stuck[tank.index] = 0
-            self.update(tank.index)
+        self.update(0)
 
     def update(self, tankNum):
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        # self.mytanks = mytanks[:1]
+        self.mytanks = mytanks[:1]
         self.flags = flags
         # print self.bzrc.get_occgrid(tankNum)
         try:
@@ -133,31 +131,29 @@ class Agent(object):
 
     def update_goal(self, bot):
         if self.goals[bot.index] is None:
-            # print "goals are none"
             next_goal = self.next_goal(bot)
             self.goals[bot.index] = next_goal
 
         else:
-            y=0
-            x=0
             if self.last_x == bot.x and self.last_y == bot.y:
                 self.timer += 1
             else:
-                self.timer=0
-            if self.timer==0:
-                self.last_x = bot.x
-                self.last_y = bot.y
+                self.timer = 0
+            self.last_x = bot.x
+            self.last_y = bot.y
             if self.timer > 10:
                 # print 'stuck on ' + str(self.points[self.goals[bot.index]][0]) + ', ' + str(self.points[self.goals[bot.index]][1])
                 self.stuck_count += 1
                 last_goal = self.goals[bot.index]
                 self.goals[bot.index] = self.random_goal(bot, last_goal)
-                if self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                if self.stuck_count > 3:
                     scale = random.uniform(2, 10)
                     if random.uniform(0, 1) < 0.5:
                         scale *= -1
-                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-200, 200))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-200, 200)))))
+                    self.points.append((min(400, max(-400, bot.x - bot.vy * scale + random.uniform(-50, 50))), min(400, max(-400, bot.y + bot.vx * scale + random.uniform(-50, 50)))))
                     self.goals[bot.index] = len(self.points) - 1
+                elif self.stuck_count > 2 or self.goals[bot.index] == last_goal:
+                    self.goals[bot.index] = random.randint(0, len(self.points) - 1)
                     # print 'added point ' + str(self.points[len(self.points) - 1][0]) + ', ' + str(self.points[len(self.points) - 1][1])
                 #self.points[self.goals[bot.index]] = (x - bot.vy * 2, y + bot.vx * 2)
                 #if bot.x < -390 or bot.x > 390 or bot.y < -390 or bot.y > 390:
@@ -165,35 +161,27 @@ class Agent(object):
                 #    self.points.remove(self.points[self.goals[bot.index]])
                 #    self.goals[bot.index] = None
                 self.timer = 0
-                if self.grid[y][x] == .5:
-                    return
-                # self.points.remove(self.points[self.goals[bot.index]])
+                return
             x,y = self.points[self.goals[bot.index]]
-                # self.points.remove(self.points[self.goals[bot.index]])
-                # print "y: "+str(y)+" x: "+str(x)
-            self.move_to_position(bot, x, y)
-                # print self.grid[y][x]
             dx = x - bot.x
             dy = y - bot.y
             dist = math.sqrt(dx**2 + dy**2)
-            if dist < 50 or self.grid[y][x] != .5:
+            if dist < 30:
                 # print 'reached goal ' + str(x) + ', ' + str(y)
-                # print "bot is at x: "+str(bot.x)+" y: "+str(bot.y)
                 if self.goals[bot.index] < len(self.points) - 1:
                     self.stuck_count = 0
-                if bot.index<len(self.goals) and self.goals[bot.index]<len(self.points):
-                    self.points.remove(self.points[self.goals[bot.index]])
+                self.points.remove(self.points[self.goals[bot.index]])
                 self.goals[bot.index] = None
                 self.bzrc.angvel(0, 0)
-                self.needGoal=True
                 return
+            self.move_to_position(bot, x, y)
             
             for i in range(len(self.points)):
                 x,y = self.points[i]
                 dx = x - bot.x
                 dy = y - bot.y
                 dist = math.sqrt(dx**2 + dy**2)
-                if dist < 50:
+                if dist < 30:
                     if i < self.goals[bot.index]:
                         self.goals[bot.index] -= 1
                     self.points.remove((x, y))
@@ -205,7 +193,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - bot.y,
                 target_x - bot.x)
         relative_angle = self.normalize_angle(target_angle - bot.angle)
-        command = Command(bot.index, 1, .5*relative_angle, True)
+        command = Command(bot.index, 1, 2 * relative_angle, True)
         self.commands.append(command)
 
     def next_goal(self, bot):
@@ -219,7 +207,7 @@ class Agent(object):
             else:
                 scale = 2
             dist = math.sqrt((x - (bot.x + bot.vx * scale))**2 + (y - (bot.y + bot.vy * scale))**2)
-            if not best or dist > best[0]:
+            if not best or dist < best[0]:
                 best = [dist, i]
         if best:
             return best[1]
@@ -229,11 +217,11 @@ class Agent(object):
         for i in range(len(self.points)):
             x, y = self.points[i]
             if random.uniform(0, 1) < 0.5:
-                scale = -100
+                scale = -10
             else:
-                scale = 100
+                scale = 10
             dist = math.sqrt((x - (bot.x - bot.vy * scale))**2 + (y - (bot.y + bot.vx * scale))**2)
-            if not best or dist > best[0]:
+            if not best or dist < best[0]:
                 best = [dist, i]
         if best:
             return best[1]

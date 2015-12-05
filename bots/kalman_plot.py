@@ -7,7 +7,7 @@ def plot(agent):
   g=Gnuplot.Gnuplot(persist=0)
   g('set xrange [-800.0: 800.0]')
   g('set yrange [-800.0: 800.0]')
-  # g('set pm3d')
+  g('set pm3d')
   g('set view map')
   g('unset key')
   g('set size square')
@@ -25,7 +25,7 @@ def plot(agent):
   # What color scheme to use
   # see http://gnuplot.sourceforge.net/demo_4.0/pm3dcolors.html
   #set palette gray
-  #set palette color
+  # g('set palette color')
   #set palette model XYZ functions gray**0.35, gray**0.5, gray**0.8
   g('set palette model RGB functions 1-gray, 1-gray, 1-gray')
 

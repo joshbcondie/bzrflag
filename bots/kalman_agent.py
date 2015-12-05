@@ -75,7 +75,8 @@ class Agent(object):
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
         plotRate=10
-        if accum_time>plotRate:
+        if accum_time>plotRate or self.firstTime:
+            self.firstTime=False
             return kalman_plot.plot(self)*-1 # Don't include the time where the game is paused to view the plot.
         else:
             return accum_time+delta_t

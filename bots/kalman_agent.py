@@ -1,6 +1,7 @@
 from bzrc import BZRC, Command, Answer
 import sys, math, time, random
 import numpy as np
+import kalman_plot
 
 class Agent(object):
 
@@ -12,6 +13,7 @@ class Agent(object):
         self.enemy=othertanks[0]
         self.goal=(self.enemy.x,self.enemy.y)
 
+
     def tick(self, time_diff):
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
@@ -22,7 +24,7 @@ class Agent(object):
 
         self.update_goal()
         self.move_to_position(self.tank,self.goal[0],self.goal[1])
-
+        kalman_plot.plot(self)
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
 

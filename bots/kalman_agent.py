@@ -13,8 +13,55 @@ class Agent(object):
         self.enemy=othertanks[0]
         self.goal=(self.enemy.x,self.enemy.y)
 
+        self.mu = np.matrix(
+            [[0],
+            [0],
+            [0],
+            [0],
+            [0],
+            [0]]
+        )
 
-    def tick(self, time_diff):
+        self.sigma_t = np.matrix(
+            [[100, 0, 0, 0, 0, 0],
+            [0, 0.1, 0, 0, 0, 0],
+            [0, 0, 0.1, 0, 0, 0],
+            [0, 0, 0, 100, 0, 0],
+            [0, 0, 0, 0, 0.1, 0],
+            [0, 0, 0, 0, 0, 0.1]]
+        )
+
+        self.sigma_x = np.matrix(
+            [[0.1, 0, 0, 0, 0, 0],
+            [0, 0.1, 0, 0, 0, 0],
+            [0, 0, 100, 0, 0, 0],
+            [0, 0, 0, 0.1, 0, 0],
+            [0, 0, 0, 0, 0.1, 0],
+            [0, 0, 0, 0, 0, 100]]
+        )
+
+        self.H = np.matrix(
+            [[1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0]]
+        )
+
+        #TODO: Make these values a parameter since default-posnoise may change
+        self.sigma_z = np.matrix(
+            [[25, 0],
+            [0, 25]]
+        )
+
+    def tick(self, delta_t):
+
+        self.F = np.matrix(
+            [[1, delta_t, delta_t**2/2, 0, 0, 0],
+            [0, 1, delta_t, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, delta_t, delta_t**2/2],
+            [0, 0, 0, 0, 1, delta_t],
+            [0, 0, 0, 0, 0, 1]]
+        )
+
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
         self.update()

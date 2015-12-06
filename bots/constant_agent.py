@@ -6,9 +6,12 @@ import sys, math, time, random
 class Agent(object):
 
     def __init__(self, bzrc):
+        self.bzrc = bzrc
         bzrc.speed(0, 1)
 
     def tick(self, time_diff):
+        tanks = self.bzrc.get_mytanks()
+        #print('Actual: ' + str(tanks[0].x) + ', ' + str(tanks[0].y))
         pass
 
 def main():

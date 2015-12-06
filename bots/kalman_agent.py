@@ -11,7 +11,6 @@ class Agent(object):
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.tank=self.mytanks[0]
         self.enemy=othertanks[0]
-        self.goal=(self.enemy.x,self.enemy.y)
 
         self.mu = np.matrix(
             [[0],
@@ -52,8 +51,9 @@ class Agent(object):
         )
 
     def tick(self, delta_t):
+        other_tank = self.bzrc.get_othertanks()[0]
 
-        self.F = np.matrix(
+        F = np.matrix(
             [[1, delta_t, delta_t**2/2, 0, 0, 0],
             [0, 1, delta_t, 0, 0, 0],
             [0, 0, 1, 0, 0, 0],
@@ -62,6 +62,20 @@ class Agent(object):
             [0, 0, 0, 0, 0, 1]]
         )
 
+        z = np.matrix(
+            [[other_tank.x],
+            [other_tank.y]]
+        )
+
+        K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
+        self.mu = F * self.mu + K * (z - self.H * F * self.mu)
+        self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
+        #print('')
+        #print('Observed: ' + str(other_tank.x) + ', ' + str(other_tank.y))
+        #print('Predicted: ' + str((F*self.mu)[0,0]) + ', ' + str((F*self.mu)[3,0]))
+        #print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
+        #print('')
+
         '''Some time has passed; decide what to do next'''
         # Get information from the BZRC server
         self.update()
@@ -69,8 +83,7 @@ class Agent(object):
         # Reset my set of commands (we don't want to run old commands)
         self.commands = []
 
-        self.update_goal()
-        self.move_to_position(self.tank,self.goal[0],self.goal[1])
+        self.move_to_position(self.tank,self.mu[0, 0],self.mu[3, 0])
         kalman_plot.plot(self)
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
@@ -98,10 +111,6 @@ class Agent(object):
         self.tank = mytanks[0]
         self.enemy = othertanks[0]
         self.flags = flags
-
-    def update_goal(self):
-        self.goal=(self.enemy.x,self.enemy.y)
-        return
 
 def main():
     # Process CLI arguments.

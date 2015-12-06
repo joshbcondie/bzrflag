@@ -11,6 +11,7 @@ class Agent(object):
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.tank=self.mytanks[0]
         self.enemy=othertanks[0]
+        self.firstTime=True
 
         self.mu = np.matrix(
             [[0],
@@ -50,7 +51,7 @@ class Agent(object):
             [0, 25]]
         )
 
-    def tick(self, delta_t):
+    def tick(self, delta_t, accum_time):
         other_tank = self.bzrc.get_othertanks()[0]
 
         F = np.matrix(
@@ -84,9 +85,14 @@ class Agent(object):
         self.commands = []
 
         self.move_to_position(self.tank,self.mu[0, 0],self.mu[3, 0])
-        kalman_plot.plot(self)
         # Send the commands to the server
         results = self.bzrc.do_commands(self.commands)
+        plotRate=10
+        if accum_time>plotRate or self.firstTime:
+            self.firstTime=False
+            return kalman_plot.plot(self)*-1 # Don't include the time where the game is paused to view the plot.
+        else:
+            return accum_time+delta_t
 
     def normalize_angle(self, angle):
         '''Make any angle be between +/- pi.'''
@@ -132,11 +138,12 @@ def main():
 
     # Run the agent
     count=0
+    accum_time=0
     try:
         while True:
             time_diff = time.time() - prev_time
             prev_time=time.time()
-            agent.tick(time_diff)
+            accum_time=agent.tick(time_diff, accum_time)
 
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."

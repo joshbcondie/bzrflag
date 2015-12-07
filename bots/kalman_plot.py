@@ -5,8 +5,8 @@ import time
 
 def plot(agent):
   g=Gnuplot.Gnuplot(persist=0)
-  g('set xrange [-800.0: 800.0]')
-  g('set yrange [-800.0: 800.0]')
+  g('set xrange [-400.0: 400.0]')
+  g('set yrange [-400.0: 400.0]')
   g('set pm3d')
   g('set view map')
   g('unset key')

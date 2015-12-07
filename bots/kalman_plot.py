@@ -4,7 +4,7 @@ import math
 import time
 
 def plot(agent):
-  g=Gnuplot.Gnuplot(persist=0)
+  g=Gnuplot.Gnuplot(filename="kalman_plots.txt")
   g('set xrange [-400.0: 400.0]')
   g('set yrange [-400.0: 400.0]')
   g('set pm3d')
@@ -34,8 +34,8 @@ def plot(agent):
   #set isosamples 30
   sigma_t = agent.sigma_t
   mu=agent.mu
-  sigma_x = math.sqrt(sigma_t[0,0])
-  sigma_y = math.sqrt(sigma_t[3,3])
+  sigma_x = sigma_t[0,0]
+  sigma_y = sigma_t[3,3]
   rho = sigma_t[0,3]/(sigma_x*sigma_y)
   x=mu[0,0]
   y=mu[3,0]
@@ -49,6 +49,6 @@ def plot(agent):
   g.splot('1.0/(2.0 * pi * '+str(sigma_x)+' * '+str(sigma_y)+' * sqrt(1 - '+str(rho)+'**2)) \
   * exp(-1.0/2.0 * (('+str(x)+'-x)**2 / '+str(sigma_x)+'**2 + ('+str(y)+'-y)**2 / '+str(sigma_y)+'**2 \
   - 2.0*'+str(rho)+'*('+str(x)+'-x)*('+str(y)+'-y)/('+str(sigma_x)+'*'+str(sigma_y)+'))) with pm3d')
-  secondsToSeePlot=5
+  secondsToSeePlot=15
   time.sleep(secondsToSeePlot)
   return secondsToSeePlot

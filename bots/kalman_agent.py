@@ -52,45 +52,49 @@ class Agent(object):
         )
 
     def tick(self, delta_t, accum_time):
-        other_tank = self.bzrc.get_othertanks()[0]
-
-        F = np.matrix(
-            [[1, delta_t, delta_t**2/2, 0, 0, 0],
-            [0, 1, delta_t, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 1, delta_t, delta_t**2/2],
-            [0, 0, 0, 0, 1, delta_t],
-            [0, 0, 0, 0, 0, 1]]
-        )
-
-        z = np.matrix(
-            [[other_tank.x],
-            [other_tank.y]]
-        )
-
-        K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
-        self.mu = F * self.mu + K * (z - self.H * F * self.mu)
-        self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
-        #print('')
-        #print('Observed: ' + str(other_tank.x) + ', ' + str(other_tank.y))
-        #print('Predicted: ' + str((F*self.mu)[0,0]) + ', ' + str((F*self.mu)[3,0]))
-        #print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
-        #print('')
-
-        '''Some time has passed; decide what to do next'''
-        # Get information from the BZRC server
-        self.update()
-
-        # Reset my set of commands (we don't want to run old commands)
-        self.commands = []
-
-        self.move_to_position(self.tank,self.mu[0, 0],self.mu[3, 0])
-        # Send the commands to the server
-        results = self.bzrc.do_commands(self.commands)
-        plotRate=10
+        plotRate=.1
         if accum_time>plotRate or self.firstTime:
             self.firstTime=False
-            return kalman_plot.plot(self)*-1 # Don't include the time where the game is paused to view the plot.
+            other_tank = self.bzrc.get_othertanks()[0]
+
+            F = np.matrix(
+                [[1, delta_t, delta_t**2/2, 0, 0, 0],
+                [0, 1, delta_t, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 1, delta_t, delta_t**2/2],
+                [0, 0, 0, 0, 1, delta_t],
+                [0, 0, 0, 0, 0, 1]]
+            )
+
+            z = np.matrix(
+                [[other_tank.x],
+                [other_tank.y]]
+            )
+
+            K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
+            self.mu = F * self.mu + K * (z - self.H * F * self.mu)
+            self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
+            #print('')
+            #print('Observed: ' + str(other_tank.x) + ', ' + str(other_tank.y))
+            #print('Predicted: ' + str((F*self.mu)[0,0]) + ', ' + str((F*self.mu)[3,0]))
+            #print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
+            #print('')
+
+            '''Some time has passed; decide what to do next'''
+            # Get information from the BZRC server
+            self.update()
+
+            # Reset my set of commands (we don't want to run old commands)
+            self.commands = []
+            distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
+            futureMu = self.mu
+            for i in range(int(distance)/20):
+                futureMu = F * futureMu
+            self.move_to_position(self.tank,futureMu[0, 0],futureMu[3, 0])
+            # Send the commands to the server
+            results = self.bzrc.do_commands(self.commands)
+            # return 0
+            return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
         else:
             return accum_time+delta_t
 

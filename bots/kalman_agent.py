@@ -94,7 +94,10 @@ class Agent(object):
             # Send the commands to the server
             results = self.bzrc.do_commands(self.commands)
             # return 0
-            print self.sigma_x
+            print "mu (mean):"
+            print self.mu
+            print "sigma_t (covariance):"
+            print self.sigma_t
             return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
         else:
             return accum_time+delta_t

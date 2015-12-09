@@ -4,7 +4,7 @@ import math
 import time
 
 def plot(agent):
-  g=Gnuplot.Gnuplot(filename="kalman_plots.txt")
+  g=Gnuplot.Gnuplot()
   g('set xrange [-400.0: 400.0]')
   g('set yrange [-400.0: 400.0]')
   g('set pm3d')

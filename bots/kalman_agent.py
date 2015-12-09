@@ -56,14 +56,14 @@ class Agent(object):
         if accum_time>plotRate or self.firstTime:
             self.firstTime=False
             other_tank = self.bzrc.get_othertanks()[0]
-
+            c = .1 # This seems to be what we're supposed to change for the experiments
             F = np.matrix(
                 [[1, delta_t, delta_t**2/2, 0, 0, 0],
                 [0, 1, delta_t, 0, 0, 0],
-                [0, 0, 1, 0, 0, 0],
+                [0, -c, 1, 0, 0, 0],
                 [0, 0, 0, 1, delta_t, delta_t**2/2],
                 [0, 0, 0, 0, 1, delta_t],
-                [0, 0, 0, 0, 0, 1]]
+                [0, 0, 0, 0, -c, 1]]
             )
 
             z = np.matrix(
@@ -94,6 +94,7 @@ class Agent(object):
             # Send the commands to the server
             results = self.bzrc.do_commands(self.commands)
             # return 0
+            print self.sigma_x
             return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
         else:
             return accum_time+delta_t

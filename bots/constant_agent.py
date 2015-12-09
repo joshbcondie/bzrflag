@@ -8,7 +8,7 @@ class Agent(object):
 
     def __init__(self, bzrc):
         self.bzrc = bzrc
-        bzrc.speed(0, 1)
+        bzrc.speed(0, .5)
 
     def tick(self, time_diff):
         if kalman_args.print_estimate_vs_actual:

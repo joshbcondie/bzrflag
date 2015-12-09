@@ -9,6 +9,7 @@ class Agent(object):
     def __init__(self, bzrc):
         self.bzrc = bzrc
         self.commands = []
+        self.constants = self.bzrc.get_constants()
         self.mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.tank=self.mytanks[0]
         self.enemy=othertanks[0]
@@ -47,8 +48,8 @@ class Agent(object):
         )
 
     def tick(self, delta_t, accum_time):
-        plotRate = kalman_args.delta_t
-        if accum_time>plotRate or self.firstTime:
+        tickRate = kalman_args.tick_rate
+        if accum_time>tickRate or self.firstTime:
             self.firstTime=False
             other_tank = self.bzrc.get_othertanks()[0]
 
@@ -60,6 +61,14 @@ class Agent(object):
             F = self.F
             K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
             self.mu = F * self.mu + K * (z - self.H * F * self.mu)
+            if (self.mu[0,0]>400):
+                self.mu[0,0]=400
+            if (self.mu[0,0]<-400):
+                self.mu[0,0]=-400
+            if (self.mu[3,0]>400):
+                self.mu[3,0]=400
+            if (self.mu[3,0]<-400):
+                self.mu[3,0]=-400
             self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
             if kalman_args.print_estimate_vs_actual:
                 print('')
@@ -76,8 +85,25 @@ class Agent(object):
             self.commands = []
             distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
             futureMu = self.mu
-            for i in range(int(distance)/20):
+            numIterations = int(distance)/15
+            for i in range(numIterations):
                 futureMu = F * futureMu
+            if (futureMu[0,0]>400):
+                futureMu[0,0]=400
+            if (futureMu[0,0]<-400):
+                futureMu[0,0]=-400
+            if (futureMu[3,0]>400):
+                futureMu[3,0]=400
+            if (futureMu[3,0]<-400):
+                futureMu[3,0]=-400
+            if kalman_args.print_iterations:
+                print "iterations:"
+                print numIterations
+            if kalman_args.print_mu:
+                print "mu:"
+                print self.mu
+                print "futureMu:"
+                print futureMu
             self.move_to_position(self.tank,futureMu[0, 0],futureMu[3, 0])
             # Send the commands to the server
             results = self.bzrc.do_commands(self.commands)

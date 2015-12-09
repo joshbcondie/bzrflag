@@ -51,26 +51,29 @@ class Agent(object):
             [0, 25]]
         )
 
+        c = 0 # This seems to be what we're supposed to change for the experiments
+        delta_t = .5
+        self.F = np.matrix(
+            [[1, delta_t, delta_t**2/2, 0, 0, 0],
+            [0, 1, delta_t, 0, 0, 0],
+            [0, -c, 1, 0, 0, 0],
+            [0, 0, 0, 1, delta_t, delta_t**2/2],
+            [0, 0, 0, 0, 1, delta_t],
+            [0, 0, 0, 0, -c, 1]]
+        )
+
     def tick(self, delta_t, accum_time):
-        plotRate=.1
+        plotRate=.5
         if accum_time>plotRate or self.firstTime:
             self.firstTime=False
             other_tank = self.bzrc.get_othertanks()[0]
-            c = .1 # This seems to be what we're supposed to change for the experiments
-            F = np.matrix(
-                [[1, delta_t, delta_t**2/2, 0, 0, 0],
-                [0, 1, delta_t, 0, 0, 0],
-                [0, -c, 1, 0, 0, 0],
-                [0, 0, 0, 1, delta_t, delta_t**2/2],
-                [0, 0, 0, 0, 1, delta_t],
-                [0, 0, 0, 0, -c, 1]]
-            )
 
             z = np.matrix(
                 [[other_tank.x],
                 [other_tank.y]]
             )
 
+            F = self.F
             K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
             self.mu = F * self.mu + K * (z - self.H * F * self.mu)
             self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
@@ -93,6 +96,7 @@ class Agent(object):
             self.move_to_position(self.tank,futureMu[0, 0],futureMu[3, 0])
             # Send the commands to the server
             results = self.bzrc.do_commands(self.commands)
+            #print str(accum_time) + " " + str(math.sqrt(self.sigma_t[0,0]**2 + self.sigma_t[0,3]**2))
             # return 0
             print "mu (mean):"
             print self.mu

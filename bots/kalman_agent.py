@@ -2,6 +2,7 @@ from bzrc import BZRC, Command, Answer
 import sys, math, time, random
 import numpy as np
 import kalman_plot
+import kalman_args
 
 class Agent(object):
 
@@ -22,48 +23,31 @@ class Agent(object):
             [0]]
         )
 
-        self.sigma_t = np.matrix(
-            [[100, 0, 0, 0, 0, 0],
-            [0, 0.1, 0, 0, 0, 0],
-            [0, 0, 0.1, 0, 0, 0],
-            [0, 0, 0, 100, 0, 0],
-            [0, 0, 0, 0, 0.1, 0],
-            [0, 0, 0, 0, 0, 0.1]]
-        )
-
-        self.sigma_x = np.matrix(
-            [[0.1, 0, 0, 0, 0, 0],
-            [0, 0.1, 0, 0, 0, 0],
-            [0, 0, 100, 0, 0, 0],
-            [0, 0, 0, 0.1, 0, 0],
-            [0, 0, 0, 0, 0.1, 0],
-            [0, 0, 0, 0, 0, 100]]
-        )
+        self.sigma_t = kalman_args.sigma_t
+        self.sigma_x = kalman_args.sigma_x
 
         self.H = np.matrix(
             [[1, 0, 0, 0, 0, 0],
             [0, 0, 0, 1, 0, 0]]
         )
 
-        #TODO: Make these values a parameter since default-posnoise may change
         self.sigma_z = np.matrix(
-            [[25, 0],
-            [0, 25]]
+            [[kalman_args.posnoise**2, 0],
+            [0, kalman_args.posnoise**2]]
         )
 
-        c = 0 # This seems to be what we're supposed to change for the experiments
-        delta_t = .5
+        delta_t = kalman_args.delta_t
         self.F = np.matrix(
             [[1, delta_t, delta_t**2/2, 0, 0, 0],
             [0, 1, delta_t, 0, 0, 0],
-            [0, -c, 1, 0, 0, 0],
+            [0, -kalman_args.c, 1, 0, 0, 0],
             [0, 0, 0, 1, delta_t, delta_t**2/2],
             [0, 0, 0, 0, 1, delta_t],
-            [0, 0, 0, 0, -c, 1]]
+            [0, 0, 0, 0, -kalman_args.c, 1]]
         )
 
     def tick(self, delta_t, accum_time):
-        plotRate=.5
+        plotRate = kalman_args.delta_t
         if accum_time>plotRate or self.firstTime:
             self.firstTime=False
             other_tank = self.bzrc.get_othertanks()[0]
@@ -77,11 +61,12 @@ class Agent(object):
             K = (F * self.sigma_t * F.T + self.sigma_x) * self.H.T * (self.H * (F * self.sigma_t * F.T + self.sigma_x) * self.H.T + self.sigma_z).I
             self.mu = F * self.mu + K * (z - self.H * F * self.mu)
             self.sigma_t = (np.matrix(np.identity(6)) - K * self.H) * (F * self.sigma_t * F.T + self.sigma_x)
-            #print('')
-            #print('Observed: ' + str(other_tank.x) + ', ' + str(other_tank.y))
-            #print('Predicted: ' + str((F*self.mu)[0,0]) + ', ' + str((F*self.mu)[3,0]))
-            #print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
-            #print('')
+            if kalman_args.print_estimate_vs_actual:
+                print('')
+                print('Observed: ' + str(other_tank.x) + ', ' + str(other_tank.y))
+                print('Predicted: ' + str((F*self.mu)[0,0]) + ', ' + str((F*self.mu)[3,0]))
+                print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
+                print('')
 
             '''Some time has passed; decide what to do next'''
             # Get information from the BZRC server
@@ -96,13 +81,16 @@ class Agent(object):
             self.move_to_position(self.tank,futureMu[0, 0],futureMu[3, 0])
             # Send the commands to the server
             results = self.bzrc.do_commands(self.commands)
-            #print str(accum_time) + " " + str(math.sqrt(self.sigma_t[0,0]**2 + self.sigma_t[0,3]**2))
-            # return 0
-            print "mu (mean):"
-            print self.mu
-            print "sigma_t (covariance):"
-            print self.sigma_t
-            return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
+
+            if kalman_args.print_mu_sigma_t:
+                print "mu (mean):"
+                print self.mu
+                print "sigma_t (covariance):"
+                print self.sigma_t
+
+            if kalman_args.plot_estimate:
+                return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
+            return 0
         else:
             return accum_time+delta_t
 

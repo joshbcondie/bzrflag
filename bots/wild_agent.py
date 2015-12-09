@@ -2,6 +2,7 @@
 
 from bzrc import BZRC, Command, Answer
 import sys, math, time, random
+import kalman_args
 
 class Agent(object):
 
@@ -11,6 +12,10 @@ class Agent(object):
         self.angvel = 1
 
     def tick(self, time_diff):
+        if kalman_args.print_estimate_vs_actual:
+            tanks = self.bzrc.get_mytanks()
+            print('Actual: ' + str(tanks[0].x) + ', ' + str(tanks[0].y))
+
         if random.uniform(0, 1) < 0.001:
             if self.speed > 0:
                 self.speed = -1 * random.uniform(0.7, 1)

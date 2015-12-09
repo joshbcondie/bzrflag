@@ -6,6 +6,8 @@ delta_t = 0.5
 plot_estimate = False
 print_mu_sigma_t = False
 print_estimate_vs_actual = False
+use_random_seed = False
+seed = 5 #You'll also need to add --seed=5 in rungame.sh
 
 # Initial estimate covariance matrix
 sigma_t = np.matrix(

@@ -10,6 +10,8 @@ class Agent(object):
         self.bzrc = bzrc
         self.speed = 1
         self.angvel = 1
+        if kalman_args.use_random_seed:
+            random.seed(kalman_args.seed)
 
     def tick(self, time_diff):
         if kalman_args.print_estimate_vs_actual:

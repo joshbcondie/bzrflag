@@ -80,6 +80,8 @@ class Agent(object):
                 print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
                 print('')
 
+            self.move_to_position(self.tank,self.mu[0,0],self.mu[3,0])
+            results = self.bzrc.do_commands(self.commands)
             '''Some time has passed; decide what to do next'''
             # Get information from the BZRC server
             self.update()
@@ -89,7 +91,7 @@ class Agent(object):
             bulletX = int(self.constants['shotspeed']) * kalman_args.delta_t * math.cos(self.tank.angle) + self.tank.x
             bulletY = int(self.constants['shotspeed']) * kalman_args.delta_t * math.sin(self.tank.angle) + self.tank.y
 
-            distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
+            # distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
             futureMu = self.mu
             numIterations = 0
             shotDist = 0
@@ -128,14 +130,17 @@ class Agent(object):
                 if kalman_args.print_bullets:
                     print "bulletX: "+str(bulletX)
                     print "bulletY: "+str(bulletY)
+                # print "futureMu:"
+                # print futureMu
                 shotDist+=int(self.constants['shotspeed']) * kalman_args.delta_t
                 distanceEnemy = math.sqrt((futureMu[0,0]-bulletX)**2+(futureMu[3,0]-bulletY)**2)
                 # time.sleep(2)
                 if distanceEnemy<10:
                     print "shoot"
+                    # time.sleep(2)
                     self.bzrc.shoot(0)
                 if kalman_args.print_distance_from_shot:
-                    print "distanceEnemy"+str(distanceEnemy)
+                    print "distanceEnemy: "+str(distanceEnemy)
             if kalman_args.print_iterations:
                 print "iterations:"
                 print numIterations
@@ -180,15 +185,15 @@ class Agent(object):
         self.tank = mytanks[0]
         self.enemy = othertanks[0]
         self.flags = flags
-        if self.tank.angle<0:
-            self.move_to_position(self.tank,200,400)
-            results = self.bzrc.do_commands(self.commands)
-        elif self.tank.angle>.5:
-            self.move_to_position(self.tank,0,0)
-            results = self.bzrc.do_commands(self.commands)
-        elif self.tank.angle<.5:
-            self.move_to_position(self.tank,-200,-400)
-            results = self.bzrc.do_commands(self.commands)
+        # if self.tank.angle<0:
+        #     self.move_to_position(self.tank,200,400)
+        #     results = self.bzrc.do_commands(self.commands)
+        # elif self.tank.angle>.5:
+        #     self.move_to_position(self.tank,0,0)
+        #     results = self.bzrc.do_commands(self.commands)
+        # elif self.tank.angle<.5:
+        #     self.move_to_position(self.tank,-200,-400)
+        #     results = self.bzrc.do_commands(self.commands)
         # print "goalAngle:"
         # print self.goalAngle
         # command = Command(0, 0, self.goalAngle, False)

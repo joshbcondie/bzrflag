@@ -80,7 +80,7 @@ class Agent(object):
                 print('Kalman Estimate: ' + str(self.mu[0,0]) + ', ' + str(self.mu[3,0]))
                 print('')
 
-            self.move_to_position(self.tank,self.mu[0,0],self.mu[3,0])
+
             results = self.bzrc.do_commands(self.commands)
             '''Some time has passed; decide what to do next'''
             # Get information from the BZRC server
@@ -90,9 +90,11 @@ class Agent(object):
             self.commands = []
             bulletX = int(self.constants['shotspeed']) * kalman_args.delta_t * math.cos(self.tank.angle) + self.tank.x
             bulletY = int(self.constants['shotspeed']) * kalman_args.delta_t * math.sin(self.tank.angle) + self.tank.y
-
-            # distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
+            distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
             futureMu = self.mu
+            for i in range(int(distance/(kalman_args.delta_t*int(self.constants['shotspeed'])))):
+                futureMu = F * futureMu
+                self.move_to_position(self.tank,futureMu[0,0],futureMu[3,0])
             numIterations = 0
             shotDist = 0
             distanceEnemy = math.sqrt((futureMu[0,0]-bulletX)**2+(futureMu[3,0]-bulletY)**2)
@@ -135,7 +137,7 @@ class Agent(object):
                 shotDist+=int(self.constants['shotspeed']) * kalman_args.delta_t
                 distanceEnemy = math.sqrt((futureMu[0,0]-bulletX)**2+(futureMu[3,0]-bulletY)**2)
                 # time.sleep(2)
-                if distanceEnemy<10:
+                if distanceEnemy<50:
                     print "shoot"
                     # time.sleep(2)
                     self.bzrc.shoot(0)

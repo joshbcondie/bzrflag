@@ -14,7 +14,7 @@ class Agent(object):
         self.tank=self.mytanks[0]
         self.enemy=othertanks[0]
         self.firstTime=True
-
+        self.goalAngle=0
         self.mu = np.matrix(
             [[0],
             [0],
@@ -46,6 +46,9 @@ class Agent(object):
             [0, 0, 0, 0, 1, delta_t],
             [0, 0, 0, 0, -kalman_args.c, 1]]
         )
+        command = Command(0, 0, 0, False)
+        self.commands.append(command)
+        results = self.bzrc.do_commands(self.commands)
 
     def tick(self, delta_t, accum_time):
         tickRate = kalman_args.tick_rate
@@ -83,19 +86,56 @@ class Agent(object):
 
             # Reset my set of commands (we don't want to run old commands)
             self.commands = []
+            bulletX = int(self.constants['shotspeed']) * kalman_args.delta_t * math.cos(self.tank.angle) + self.tank.x
+            bulletY = int(self.constants['shotspeed']) * kalman_args.delta_t * math.sin(self.tank.angle) + self.tank.y
+
             distance = math.sqrt((other_tank.x-self.tank.x)**2+(other_tank.y-self.tank.y)**2)
             futureMu = self.mu
-            numIterations = int(distance)/15
-            for i in range(numIterations):
+            numIterations = 0
+            shotDist = 0
+            distanceEnemy = math.sqrt((futureMu[0,0]-bulletX)**2+(futureMu[3,0]-bulletY)**2)
+            if distanceEnemy<100:
+                self.bzrc.shoot(0)
+            while shotDist<800:
+                numIterations+=1
                 futureMu = F * futureMu
-            if (futureMu[0,0]>400):
-                futureMu[0,0]=400
-            if (futureMu[0,0]<-400):
-                futureMu[0,0]=-400
-            if (futureMu[3,0]>400):
-                futureMu[3,0]=400
-            if (futureMu[3,0]<-400):
-                futureMu[3,0]=-400
+                if (futureMu[0,0]>400):
+                    futureMu[0,0]=400
+                if (futureMu[0,0]<-400):
+                    futureMu[0,0]=-400
+                if (futureMu[3,0]>400):
+                    futureMu[3,0]=400
+                if (futureMu[3,0]<-400):
+                    futureMu[3,0]=-400
+                bulletX = int(self.constants['shotspeed']) * kalman_args.delta_t * math.cos(self.tank.angle) + bulletX
+                bulletY = int(self.constants['shotspeed']) * kalman_args.delta_t * math.sin(self.tank.angle) + bulletY
+                if (bulletX>400):
+                    bulletX=400
+                if (bulletX<-400):
+                    bulletX=-400
+                if (bulletX>400):
+                    bulletX=400
+                if (bulletX<-400):
+                    bulletX=-400
+                if (bulletY>400):
+                    bulletY=400
+                if (bulletY<-400):
+                    bulletY=-400
+                if (bulletY>400):
+                    bulletY=400
+                if (bulletY<-400):
+                    bulletY=-400
+                if kalman_args.print_bullets:
+                    print "bulletX: "+str(bulletX)
+                    print "bulletY: "+str(bulletY)
+                shotDist+=int(self.constants['shotspeed']) * kalman_args.delta_t
+                distanceEnemy = math.sqrt((futureMu[0,0]-bulletX)**2+(futureMu[3,0]-bulletY)**2)
+                # time.sleep(2)
+                if distanceEnemy<10:
+                    print "shoot"
+                    self.bzrc.shoot(0)
+                if kalman_args.print_distance_from_shot:
+                    print "distanceEnemy"+str(distanceEnemy)
             if kalman_args.print_iterations:
                 print "iterations:"
                 print numIterations
@@ -104,16 +144,14 @@ class Agent(object):
                 print self.mu
                 print "futureMu:"
                 print futureMu
-            self.move_to_position(self.tank,futureMu[0, 0],futureMu[3, 0])
             # Send the commands to the server
-            results = self.bzrc.do_commands(self.commands)
-
             if kalman_args.print_mu_sigma_t:
                 print "mu (mean):"
                 print self.mu
                 print "sigma_t (covariance):"
                 print self.sigma_t
-
+            # print "angle:"
+            # print self.tank.angle
             if kalman_args.plot_estimate:
                 return kalman_plot.plot(self)*-1 # Don't include the time where the agent is paused to view the plot.
             return 0
@@ -138,11 +176,23 @@ class Agent(object):
         self.commands.append(command)
 
     def update(self):
-        self.bzrc.shoot(0)
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.tank = mytanks[0]
         self.enemy = othertanks[0]
         self.flags = flags
+        if self.tank.angle<0:
+            self.move_to_position(self.tank,200,400)
+            results = self.bzrc.do_commands(self.commands)
+        elif self.tank.angle>.5:
+            self.move_to_position(self.tank,0,0)
+            results = self.bzrc.do_commands(self.commands)
+        elif self.tank.angle<.5:
+            self.move_to_position(self.tank,-200,-400)
+            results = self.bzrc.do_commands(self.commands)
+        # print "goalAngle:"
+        # print self.goalAngle
+        # command = Command(0, 0, self.goalAngle, False)
+        # self.commands.append(command)
 
 def main():
     # Process CLI arguments.

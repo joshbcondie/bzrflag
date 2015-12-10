@@ -49,6 +49,6 @@ def plot(agent):
   g.splot('1.0/(2.0 * pi * '+str(sigma_x)+' * '+str(sigma_y)+' * sqrt(1 - '+str(rho)+'**2)) \
   * exp(-1.0/2.0 * (('+str(x)+'-x)**2 / '+str(sigma_x)+'**2 + ('+str(y)+'-y)**2 / '+str(sigma_y)+'**2 \
   - 2.0*'+str(rho)+'*('+str(x)+'-x)*('+str(y)+'-y)/('+str(sigma_x)+'*'+str(sigma_y)+'))) with pm3d')
-  secondsToSeePlot=15
+  secondsToSeePlot=30
   time.sleep(secondsToSeePlot)
   return secondsToSeePlot

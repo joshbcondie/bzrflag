@@ -11,6 +11,9 @@ tick_rate = .1
 seed = 5 #You'll also need to add --seed=5 in rungame.sh
 print_mu = False
 print_iterations = False
+iter_weight = 1
+print_bullets = False
+print_distance_from_shot = False
 
 # Initial estimate covariance matrix
 sigma_t = np.matrix(
